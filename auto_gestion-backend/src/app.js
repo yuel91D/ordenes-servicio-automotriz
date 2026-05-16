@@ -16,3 +16,6 @@ app.get('/', (req, res) => {
 
 // ¡Exportamos solo la aplicación configurada!
 module.exports = app;
+
+// Esto carga el archivo index.js de la carpeta models y ejecuta todas las relaciones
+require('./models');
