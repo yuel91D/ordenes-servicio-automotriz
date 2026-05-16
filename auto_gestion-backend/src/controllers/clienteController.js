@@ -1,54 +1,48 @@
-const clienteRepository = require('../repositories/clienteRepository');
+const clienteService = require('../services/clienteService');
 
 class ClienteController {
-  async getAll(req, res) {
+  async listar(req, res) {
     try {
-      const clientes = await clienteRepository.getAll();
-      return res.status(200).json(clientes);
+      const clientes = await clienteService.listarClientes();
+      res.json({ success: true, data: clientes });
     } catch (error) {
-      return res.status(500).json({ message: 'Error al obtener los clientes', error: error.message });
+      res.status(500).json({ success: false, message: error.message });
     }
   }
 
-  async getById(req, res) {
+  async obtener(req, res) {
     try {
-      const { id } = req.params;
-      const cliente = await clienteRepository.getById(id);
-      if (!cliente) return res.status(404).json({ message: 'Cliente no encontrado' });
-      return res.status(200).json(cliente);
+      const cliente = await clienteService.obtenerCliente(req.params.id);
+      res.json({ success: true, data: cliente });
     } catch (error) {
-      return res.status(500).json({ message: 'Error al obtener el cliente', error: error.message });
+      res.status(404).json({ success: false, message: error.message });
     }
   }
 
-  async create(req, res) {
+  async crear(req, res) {
     try {
-      const nuevoCliente = await clienteRepository.create(req.body);
-      return res.status(201).json({ message: 'Cliente creado con éxito', data: nuevoCliente });
+      const cliente = await clienteService.crearCliente(req.body);
+      res.status(201).json({ success: true, data: cliente });
     } catch (error) {
-      return res.status(500).json({ message: 'Error al crear el cliente', error: error.message });
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 
-  async update(req, res) {
+  async actualizar(req, res) {
     try {
-      const { id } = req.params;
-      const clienteActualizado = await clienteRepository.update(id, req.body);
-      if (!clienteActualizado) return res.status(404).json({ message: 'Cliente no encontrado' });
-      return res.status(200).json({ message: 'Cliente actualizado con éxito', data: clienteActualizado });
+      const cliente = await clienteService.actualizarCliente(req.params.id, req.body);
+      res.json({ success: true, data: cliente });
     } catch (error) {
-      return res.status(500).json({ message: 'Error al actualizar el cliente', error: error.message });
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 
-  async delete(req, res) {
+  async eliminar(req, res) {
     try {
-      const { id } = req.params;
-      const eliminado = await clienteRepository.delete(id);
-      if (!eliminado) return res.status(404).json({ message: 'Cliente no encontrado' });
-      return res.status(200).json({ message: 'Cliente eliminado correctamente' });
+      await clienteService.eliminarCliente(req.params.id);
+      res.json({ success: true, message: 'Cliente eliminado correctamente' });
     } catch (error) {
-      return res.status(500).json({ message: 'Error al eliminar el cliente', error: error.message });
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 }

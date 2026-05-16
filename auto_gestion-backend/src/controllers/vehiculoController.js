@@ -1,56 +1,86 @@
-const vehiculoRepository = require('../repositories/vehiculoRepository');
+const vehiculoService = require('../services/vehiculoService');
 
 class VehiculoController {
-  async getAll(req, res) {
+  // Aseguramos el nombre 'crear'
+  async crear(req, res) {
     try {
-      const vehiculos = await vehiculoRepository.getAll();
-      return res.status(200).json(vehiculos);
+      const vehiculo = await vehiculoService.crearVehiculo(req.body);
+      res.status(201).json({
+        success: true,
+        data: vehiculo
+      });
     } catch (error) {
-      return res.status(500).json({ message: 'Error al obtener los vehículos', error: error.message });
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
-  async getById(req, res) {
+  // Aseguramos el nombre 'listar'
+  async listar(req, res) {
     try {
-      const { id } = req.params;
-      const vehiculo = await vehiculoRepository.getById(id);
-      if (!vehiculo) return res.status(404).json({ message: 'Vehículo no encontrado' });
-      return res.status(200).json(vehiculo);
+      const vehiculos = await vehiculoService.listarVehiculos();
+      res.json({
+        success: true,
+        data: vehiculos
+      });
     } catch (error) {
-      return res.status(500).json({ message: 'Error al obtener el vehículo', error: error.message });
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
-  async create(req, res) {
+  // Aseguramos el nombre 'obtener'
+  async obtener(req, res) {
     try {
-      const nuevoVehiculo = await vehiculoRepository.create(req.body);
-      return res.status(201).json({ message: 'Vehículo registrado con éxito', data: nuevoVehiculo });
+      const vehiculo = await vehiculoService.obtenerVehiculo(req.params.id);
+      res.json({
+        success: true,
+        data: vehiculo
+      });
     } catch (error) {
-      return res.status(500).json({ message: 'Error al registrar el vehículo', error: error.message });
+      res.status(404).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
-  async update(req, res) {
+  // Aseguramos el nombre 'actualizar'
+  async actualizar(req, res) {
     try {
-      const { id } = req.params;
-      const vehiculoActualizado = await vehiculoRepository.update(id, req.body);
-      if (!vehiculoActualizado) return res.status(404).json({ message: 'Vehículo no encontrado' });
-      return res.status(200).json({ message: 'Vehículo actualizado con éxito', data: vehiculoActualizado });
+      const vehiculo = await vehiculoService.actualizarVehiculo(req.params.id, req.body);
+      res.json({
+        success: true,
+        data: vehiculo
+      });
     } catch (error) {
-      return res.status(500).json({ message: 'Error al actualizar el vehículo', error: error.message });
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
-  async delete(req, res) {
+  // Aseguramos el nombre 'eliminar'
+  async eliminar(req, res) {
     try {
-      const { id } = req.params;
-      const eliminado = await vehiculoRepository.delete(id);
-      if (!eliminado) return res.status(404).json({ message: 'Vehículo no encontrado' });
-      return res.status(200).json({ message: 'Vehículo eliminado correctamente' });
+      await vehiculoService.eliminarVehiculo(req.params.id);
+      res.json({
+        success: true,
+        message: 'Vehículo eliminado'
+      });
     } catch (error) {
-      return res.status(500).json({ message: 'Error al eliminar el vehículo', error: error.message });
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 }
 
+// Crucial: Exportar una instancia con 'new' para que los métodos existan
 module.exports = new VehiculoController();

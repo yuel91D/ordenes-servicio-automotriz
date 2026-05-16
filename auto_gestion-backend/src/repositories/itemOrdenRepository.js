@@ -1,34 +1,29 @@
 const { ItemOrden, OrdenServicio } = require('../models');
 
 class ItemOrdenRepository {
-  // Obtener todos los ítems de repuestos/servicios registrados
-  async getAll() {
+  async obtenerTodos() {
     return await ItemOrden.findAll({
-      include: [{ model: OrdenServicio, as: 'orden' }] // 🔥 Corregido aquí
+      include: [{ model: OrdenServicio, as: 'orden' }]
     });
   }
 
-  // Buscar un ítem por su ID primario (item_orden_id)
-  async getById(id) {
+  async obtenerPorId(id) {
     return await ItemOrden.findByPk(id, {
-      include: [{ model: OrdenServicio, as: 'orden' }] // 🔥 Corregido aquí
+      include: [{ model: OrdenServicio, as: 'orden' }]
     });
   }
 
-  // Agregar un repuesto/servicio a una orden
-  async create(datosItem) {
-    return await ItemOrden.create(datosItem);
+  async crear(datos) {
+    return await ItemOrden.create(datos);
   }
 
-  // Actualizar precio, descripción o cantidad de un ítem existente
-  async update(id, datosActualizados) {
+  async actualizar(id, datos) {
     const item = await ItemOrden.findByPk(id);
     if (!item) return null;
-    return await item.update(datosActualizados);
+    return await item.update(datos);
   }
 
-  // Eliminar un ítem de una orden
-  async delete(id) {
+  async eliminar(id) {
     const item = await ItemOrden.findByPk(id);
     if (!item) return false;
     await item.destroy();
@@ -36,4 +31,5 @@ class ItemOrdenRepository {
   }
 }
 
+// Es vital el 'new' para que actúe como un objeto con funciones asignadas
 module.exports = new ItemOrdenRepository();

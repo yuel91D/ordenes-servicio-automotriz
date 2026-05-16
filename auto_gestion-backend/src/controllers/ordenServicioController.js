@@ -1,95 +1,50 @@
-const ordenServicioRepository = require('../repositories/ordenServicioRepository');
+const ordenServicioService = require('../services/ordenServicioService');
 
 class OrdenServicioController {
-  // 1. Obtener todas las órdenes
-  async getAll(req, res) {
+  async listar(req, res) {
     try {
-      const ordenes = await ordenServicioRepository.getAll();
-      return res.status(200).json(ordenes);
+      const ordenes = await ordenServicioService.listarOrdenes();
+      res.json({ success: true, data: ordenes });
     } catch (error) {
-      return res.status(500).json({ 
-        message: 'Error al obtener las órdenes de servicio', 
-        error: error.message 
-      });
+      res.status(500).json({ success: false, message: error.message });
     }
   }
 
-  // 2. Obtener una sola orden por ID
-  async getById(req, res) {
+  async obtener(req, res) {
     try {
-      const { id } = req.params;
-      const orden = await ordenServicioRepository.getById(id);
-      
-      if (!orden) {
-        return res.status(404).json({ message: 'Orden de servicio no encontrada' });
-      }
-      
-      return res.status(200).json(orden);
+      const orden = await ordenServicioService.obtenerOrden(req.params.id);
+      res.json({ success: true, data: orden });
     } catch (error) {
-      return res.status(500).json({ 
-        message: 'Error al obtener la orden de servicio', 
-        error: error.message 
-      });
+      res.status(404).json({ success: false, message: error.message });
     }
   }
 
-  // 3. Crear una nueva orden
-  async create(req, res) {
+  async crear(req, res) {
     try {
-      const nuevaOrden = await ordenServicioRepository.create(req.body);
-      return res.status(201).json({
-        message: 'Orden de servicio creada con éxito',
-        data: nuevaOrden
-      });
+      const orden = await ordenServicioService.crearOrden(req.body);
+      res.status(201).json({ success: true, data: orden });
     } catch (error) {
-      return res.status(500).json({ 
-        message: 'Error al crear la orden de servicio', 
-        error: error.message 
-      });
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 
-  // 4. Actualizar una orden
-  async update(req, res) {
+  async actualizar(req, res) {
     try {
-      const { id } = req.params;
-      const ordenActualizada = await ordenServicioRepository.update(id, req.body);
-      
-      if (!ordenActualizada) {
-        return res.status(404).json({ message: 'Orden de servicio no encontrada para actualizar' });
-      }
-      
-      return res.status(200).json({
-        message: 'Orden de servicio actualizada con éxito',
-        data: ordenActualizada
-      });
+      const orden = await ordenServicioService.actualizarOrden(req.params.id, req.body);
+      res.json({ success: true, data: orden });
     } catch (error) {
-      return res.status(500).json({ 
-        message: 'Error al actualizar la orden de servicio', 
-        error: error.message 
-      });
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 
-  // 5. Eliminar una orden
-  async delete(req, res) {
+  async eliminar(req, res) {
     try {
-      const { id } = req.params;
-      const eliminado = await ordenServicioRepository.delete(id);
-      
-      if (!eliminado) {
-        return res.status(404).json({ message: 'Orden de servicio no encontrada' });
-      }
-      
-      return res.status(200).json({ message: 'Orden de servicio eliminada correctamente' });
+      await ordenServicioService.eliminarOrden(req.params.id);
+      res.json({ success: true, message: 'Orden de servicio eliminada correctamente' });
     } catch (error) {
-      return res.status(500).json({ 
-        message: 'Error al eliminar la orden de servicio', 
-        error: error.message 
-      });
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 }
 
-// Exportamos la instancia para usarla en las rutas
 module.exports = new OrdenServicioController();

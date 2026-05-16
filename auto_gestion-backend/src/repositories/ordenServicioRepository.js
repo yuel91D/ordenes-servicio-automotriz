@@ -1,46 +1,34 @@
-const { OrdenServicio, Vehiculos, ItemOrden } = require('../models');
+const { ItemOrden, OrdenServicio } = require('../models');
 
-class OrdenServicioRepository {
-  // 1. Obtener todas las órdenes con el vehículo asignado e ítems incluidos
-  async getAll() {
-    return await OrdenServicio.findAll({
-      include: [
-        { model: Vehiculos, as: 'vehiculo' },
-        { model: ItemOrden, as: 'items' }
-      ]
+class ItemOrdenRepository {
+  async obtenerTodos() {
+    return await ItemOrden.findAll({
+      include: [{ model: OrdenServicio, as: 'orden' }]
     });
   }
 
-  // 2. Buscar una orden específica por su ID (la llave primaria real)
-  async getById(id) {
-    return await OrdenServicio.findByPk(id, {
-      include: [
-        { model: Vehiculos, as: 'vehiculo' },
-        { model: ItemOrden, as: 'items' }
-      ]
+  async obtenerPorId(id) {
+    return await ItemOrden.findByPk(id, {
+      include: [{ model: OrdenServicio, as: 'orden' }]
     });
   }
 
-  // 3. Crear una nueva orden de servicio
-  async create(datosOrden) {
-    return await OrdenServicio.create(datosOrden);
+  async crear(datos) {
+    return await ItemOrden.create(datos);
   }
 
-  // 4. Actualizar datos de una orden
-  async update(id, datosActualizados) {
-    const orden = await OrdenServicio.findByPk(id);
-    if (!orden) return null;
-    return await orden.update(datosActualizados);
+  async actualizar(id, datos) {
+    const item = await ItemOrden.findByPk(id);
+    if (!item) return null;
+    return await item.update(datos);
   }
 
-  // 5. Eliminar una orden de servicio
-  async delete(id) {
-    const orden = await OrdenServicio.findByPk(id);
-    if (!orden) return false;
-    await orden.destroy();
+  async eliminar(id) {
+    const item = await ItemOrden.findByPk(id);
+    if (!item) return false;
+    await item.destroy();
     return true;
   }
 }
 
-// Exportamos una instancia única de la clase (Singleton)
-module.exports = new OrdenServicioRepository();
+module.exports = new ItemOrdenRepository();

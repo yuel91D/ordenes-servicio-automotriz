@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 const vehiculoController = require('../controllers/vehiculoController');
 
-router.get('/', vehiculoController.getAll);
-router.get('/:id', vehiculoController.getById);
-router.post('/', vehiculoController.create);
-router.put('/:id', vehiculoController.update);
-router.delete('/:id', vehiculoController.delete);
+// Mapeo exacto de funciones
+router.post('/', vehiculoController.crear);
+router.get('/', vehiculoController.listar);
+router.get('/:id', vehiculoController.obtener);
+router.put('/:id', vehiculoController.actualizar);
+router.delete('/:id', vehiculoController.eliminar);
 
 module.exports = router;

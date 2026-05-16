@@ -1,32 +1,29 @@
-// ✅ AHORA: Apuntas directo a la carpeta 'models' (Node.js busca el index.js automáticamente)
-// y extraes ("destructuras") solo los modelos que necesitas en este archivo.
 const { Vehiculos, Cliente } = require('../models');
 
 class VehiculoRepository {
-  async getAll() {
-    // Recuerda usar 'Vehiculos' con la 'V' mayúscula y la 's' al final, tal como lo exportamos
+  async obtenerTodos() { // 🔥 Cambiado para coincidir con tu listarVehiculos()
     return await Vehiculos.findAll({
-      include: { model: Cliente, as: 'cliente' }
+      include: [{ model: Cliente, as: 'cliente' }]
     });
   }
 
-  async getById(id) {
+  async obtenerPorId(id) { // 🔥 Cambiado para coincidir con tu obtenerVehiculo(id)
     return await Vehiculos.findByPk(id, {
-      include: { model: Cliente, as: 'cliente' }
+      include: [{ model: Cliente, as: 'cliente' }]
     });
   }
 
-  async create(datosVehiculo) {
+  async crear(datosVehiculo) { // 🔥 Cambiado para coincidir con tu crearVehiculo(data)
     return await Vehiculos.create(datosVehiculo);
   }
 
-  async update(id, datosActualizados) {
+  async actualizar(id, datosActualizados) { // 🔥 Cambiado para coincidir con tu actualizarVehiculo
     const vehiculo = await Vehiculos.findByPk(id);
     if (!vehiculo) return null;
     return await vehiculo.update(datosActualizados);
   }
 
-  async delete(id) {
+  async eliminar(id) { // 🔥 Cambiado para coincidir con tu eliminarVehiculo
     const vehiculo = await Vehiculos.findByPk(id);
     if (!vehiculo) return false;
     await vehiculo.destroy();

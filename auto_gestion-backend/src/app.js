@@ -1,30 +1,27 @@
 const express = require('express');
 const cors = require('cors');
 
-// Importamos todos los enrutadores de la API
+// Importamos los enrutadores
 const ordenServicioRoutes = require('./routes/ordenServicioRoutes');
 const clienteRoutes = require('./routes/clienteRoutes');
 const vehiculoRoutes = require('./routes/vehiculoRoutes');
-const itemOrdenRoutes = require('./routes/itemOrdenRoutes'); // 🔥 ¡El último bloque!
+const itemOrdenRoutes = require('./routes/itemOrdenRoutes');
 
 const app = express();
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Ruta de prueba
-app.get('/', (req, res) => {
-  res.json({ message: 'API funcionando correctamente' });
-});
+// Rutas Cortas y Elegantes 🔥
+app.use('/ordenes', ordenServicioRoutes);
+app.use('/clientes', clienteRoutes);
+app.use('/vehiculos', vehiculoRoutes);
+app.use('/items', itemOrdenRoutes);
 
-// Registramos todos los endpoints globales de la API
-app.use('/api/ordenes', ordenServicioRoutes);
-app.use('/api/clientes', clienteRoutes);
-app.use('/api/vehiculos', vehiculoRoutes);
-app.use('/api/items', itemOrdenRoutes); // 🔥 ¡Ecosistema de ítems activo!
+app.get('/', (req, res) => {
+  res.json({ message: 'API con Arquitectura de 3 Capas lista' });
+});
 
 module.exports = app;
 
-// Carga de relaciones centralizadas
 require('./models');

@@ -1,31 +1,29 @@
 const { Cliente, Vehiculos } = require('../models');
 
 class ClienteRepository {
-  // Obtener todos los clientes con sus vehículos asignados
-  async getAll() {
+  async obtenerTodos() {
     return await Cliente.findAll({
       include: [{ model: Vehiculos, as: 'vehiculos' }]
     });
   }
 
-  // Buscar un cliente por ID con sus vehículos
-  async getById(id) {
+  async obtenerPorId(id) {
     return await Cliente.findByPk(id, {
       include: [{ model: Vehiculos, as: 'vehiculos' }]
     });
   }
 
-  async create(datosCliente) {
-    return await Cliente.create(datosCliente);
+  async crear(datos) {
+    return await Cliente.create(datos);
   }
 
-  async update(id, datosActualizados) {
+  async actualizar(id, datos) {
     const cliente = await Cliente.findByPk(id);
     if (!cliente) return null;
-    return await cliente.update(datosActualizados);
+    return await cliente.update(datos);
   }
 
-  async delete(id) {
+  async eliminar(id) {
     const cliente = await Cliente.findByPk(id);
     if (!cliente) return false;
     await cliente.destroy();
