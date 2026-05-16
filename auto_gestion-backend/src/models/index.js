@@ -3,17 +3,17 @@ const Vehiculos = require('./Vehiculos');
 const OrdenServicio = require('./OrdenServicio');
 const ItemOrden = require('./ItemOrden');
 
-// 1. CLIENTE -> VEHICULOS
+// 1. Relación Cliente <-> Vehículos
 Cliente.hasMany(Vehiculos, { foreignKey: 'cliente_id', as: 'vehiculos' });
 Vehiculos.belongsTo(Cliente, { foreignKey: 'cliente_id', as: 'cliente' });
 
-// 2. VEHICULOS -> ORDENES
+// 2. Relación Vehículos <-> OrdenServicio
 Vehiculos.hasMany(OrdenServicio, { foreignKey: 'vehiculo_id', as: 'ordenes' });
 OrdenServicio.belongsTo(Vehiculos, { foreignKey: 'vehiculo_id', as: 'vehiculo' });
 
-// 3. ORDEN -> ITEMS
+// 3. Relación OrdenServicio <-> ItemOrden (¡Esta es la que fallaba al buscar el ID!)
 OrdenServicio.hasMany(ItemOrden, { foreignKey: 'orden_servicio_id', as: 'items' });
-ItemOrden.belongsTo(ItemOrden, { foreignKey: 'orden_servicio_id', as: 'orden' });
+ItemOrden.belongsTo(OrdenServicio, { foreignKey: 'orden_servicio_id', as: 'orden' });
 
 module.exports = {
   Cliente,

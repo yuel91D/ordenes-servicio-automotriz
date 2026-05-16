@@ -5,7 +5,8 @@ const ItemOrden = sequelize.define('ItemOrden', {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
-    primaryKey: true
+    primaryKey: true,
+    field: 'item_orden_id' // 🔥 Sincronizado con MySQL
   },
   descripcion: {
     type: DataTypes.STRING(255),
@@ -18,7 +19,7 @@ const ItemOrden = sequelize.define('ItemOrden', {
   valorUnitario: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
-    field: 'valor_unitario' // Asegura el snake_case de tu base de datos
+    field: 'valor_unitario'
   }
 }, {
   tableName: 'items_orden',

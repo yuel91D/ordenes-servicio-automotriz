@@ -1,13 +1,12 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Vehiculos = require('./Vehiculos');
 
 const OrdenServicio = sequelize.define('OrdenServicio', {
-  ordenServicioId: {
+  id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
-    field: 'orden_servicio_id'
+    field: 'orden_servicio_id' // 🔥 Mapea tu llave primaria real
   },
   fecha: {
     type: DataTypes.DATEONLY,
@@ -21,19 +20,11 @@ const OrdenServicio = sequelize.define('OrdenServicio', {
   vehiculoId: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    field: 'vehiculo_id',
-    references: {
-      model: Vehiculos, 
-      key: 'vehiculos_id'
-    }
+    field: 'vehiculo_id' // 🔥 Sincronizado con la columna de tu tabla
   }
 }, {
   tableName: 'ordenes_servicio',
   timestamps: false
 });
-
-// ❌ REVISA AQUÍ: Borra o comenta estas líneas para que no dupliquen al index.js
-// Vehiculos.hasMany(OrdenServicio, { foreignKey: 'vehiculo_id', as: 'ordenes' });
-// OrdenServicio.belongsTo(Vehiculos, { foreignKey: 'vehiculo_id', as: 'vehiculo' });
 
 module.exports = OrdenServicio;
