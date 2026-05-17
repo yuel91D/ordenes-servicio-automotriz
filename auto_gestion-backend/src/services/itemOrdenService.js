@@ -44,7 +44,25 @@ class ItemOrdenService {
   async listarItems() { return []; }
   async obtenerItem(id) { return null; }
   async actualizarItem(id, datos) { return null; }
-  async eliminarItem(id) { return true; }
+  async eliminarItem(id) {
+    const ItemOrden = db.ItemOrden || db.itemOrden || db.ItemOrdens || db.item_orden;
+
+    if (!ItemOrden) {
+      throw new Error('El modelo "ItemOrden" no está correctamente cargado o exportado.');
+    }
+
+    // 1. Buscamos si el ítem realmente existe antes de intentar borrarlo
+    const item = await ItemOrden.findByPk(id);
+
+    if (!item) {
+      throw new Error(`No se puede eliminar: El ítem con ID ${id} no existe en el sistema.`);
+    }
+
+    // 2. Lo eliminamos físicamente de MySQL
+    await item.destroy();
+
+    return { message: `Ítem con ID ${id} eliminado correctamente.` };
+  }
 }
 
 module.exports = new ItemOrdenService();
