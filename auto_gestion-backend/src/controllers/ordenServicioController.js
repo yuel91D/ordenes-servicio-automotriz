@@ -50,6 +50,32 @@ class OrdenServicioController {
       res.status(500).json({ success: false, message: error.message });
     }
   }
+  // 6. Reporte por Fechas  
+  async obtenerReportePorFechas(req, res) {
+    try {
+      const { fecha_inicio, fecha_fin } = req.query;
+
+      // Validación rápida de parámetros de consulta
+      if (!fecha_inicio || !fecha_fin) {
+        return res.status(400).json({
+          success: false,
+          message: "Faltan parámetros requeridos: 'fecha_inicio' y 'fecha_fin' son obligatorios (Formato: YYYY-MM-DD)."
+        });
+      }
+
+      const reporte = await ordenServicioService.generarReporteFechas(fecha_inicio, fecha_fin);
+
+      return res.status(200).json({
+        success: true,
+        data: reporte
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: error.message || "Error interno al generar el reporte."
+      });
+    }
+  }
 }
 
 module.exports = new OrdenServicioController();

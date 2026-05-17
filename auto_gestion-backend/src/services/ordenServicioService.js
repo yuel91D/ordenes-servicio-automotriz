@@ -1,36 +1,54 @@
 const ordenServicioRepository = require('../repositories/ordenServicioRepository');
 
 // 1. Importamos los modelos reales directo desde su archivo fuente
+const { Op } = require('sequelize');
 const OrdenServicio = require('../models/OrdenServicio');
 const Vehiculos = require('../models/Vehiculos');
 const ItemOrden = require('../models/ItemOrden');
 
 // 2. 🛡️ SEGURO ANTIFALLAS: Forzamos la declaración manual de relaciones aquí mismo
-// Esto garantiza que Sequelize conozca los puentes, sin importar cómo se cargue el index.js
 if (!OrdenServicio.associations || !OrdenServicio.associations.vehiculo) {
   OrdenServicio.belongsTo(Vehiculos, { foreignKey: 'vehiculo_id', as: 'vehiculo' });
 }
 if (!OrdenServicio.associations || !OrdenServicio.associations.items) {
-  OrdenServicio.hasMany(ItemOrden, { foreignKey: 'orden_servicio_id', as: 'items' });
+  OrdenServicio.hasMany(ItemOrden, { foreignKey: 'ordenServicioId', as: 'items' });
 }
 
 class OrdenServicioService {
-  // 1. Crear Orden
-  async crearOrden(datos) {
-    const { vehiculo_id } = datos;
-
-    const vehiculo = await Vehiculos.findByPk(vehiculo_id);
-    if (!vehiculo) {
-      throw new Error('El vehículo especificado no existe.');
+  
+  // 1. Reporte por rango de fechas
+  async generarReporteFechas(fechaInicio, fechaFin) {
+    // 🛡️ Seguro Relacional en Caliente básico
+    if (!OrdenServicio.associations.vehiculo) {
+      OrdenServicio.belongsTo(Vehiculos, { foreignKey: 'vehiculo_id', as: 'vehiculo' });
+    }
+    if (!OrdenServicio.associations.items) {
+      OrdenServicio.hasMany(ItemOrden, { foreignKey: 'ordenServicioId', as: 'items' }); 
     }
 
-    const estadoVehiculo = vehiculo.estado ? String(vehiculo.estado).toLowerCase().trim() : '';
+    // 🔍 Consulta robusta a MySQL con tu campo REAL 'fecha'
+    const ordenes = await OrdenServicio.findAll({
+      where: {
+        // 🌟 ¡Tu campo real mapeado del modelo!
+        fecha: {
+          [Op.between]: [fechaInicio, fechaFin]
+        }
+      },
+      include: [
+        {
+          model: Vehiculos,
+          as: 'vehiculo'
+        },
+        {
+          model: ItemOrden,
+          as: 'items'
+        }
+      ],
+      // 🌟 Ordenamos por tu campo real
+      order: [['fecha', 'DESC']] 
+    });
 
-    if (estadoVehiculo === 'inactivo' || vehiculo.activo === false || vehiculo.activo === 0) {
-      throw new Error('No se puede crear la orden: El vehículo se encuentra INACTIVO.');
-    }
-
-    return await ordenServicioRepository.crear(datos);
+    return ordenes;
   }
 
   // 2. Obtener todas las órdenes con sus relaciones
