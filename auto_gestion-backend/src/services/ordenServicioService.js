@@ -15,8 +15,33 @@ if (!OrdenServicio.associations || !OrdenServicio.associations.items) {
 }
 
 class OrdenServicioService {
+
+ // 🚀 Crear Orden con Validación de Vehículo Activo
+  async crear(datosOrden) {
+    // 🌟 Leemos directamente 'vehiculo_id' que es lo que pasa limpio por el validador
+    const { vehiculo_id } = datosOrden; 
+
+    if (!vehiculo_id) {
+      throw new Error("Error: No se proporcionó un 'vehiculo_id' en la petición.");
+    }
+
+    // 🔍 Candado 1: Buscar el vehículo usando el ID en MySQL
+    const vehiculo = await Vehiculos.findByPk(vehiculo_id);
+
+    if (!vehiculo) {
+      throw new Error(`Error: El vehículo con ID ${vehiculo_id} no está registrado en el sistema.`);
+    }
+
+    // 🛡️ Candado 2: VALIDACIÓN CHECKLIST (Frenar si está inactivo)
+    if (vehiculo.estado === 'inactivo') {
+      throw new Error(`No se puede registrar la orden: El vehículo se encuentra INACTIVO en el sistema.`);
+    }
+
+    // 🏎️ Si el vehículo está activo, procede a guardarse en la base de datos
+    return await ordenServicioRepository.crear(datosOrden);
+  }
   
-  // 1. Reporte por rango de fechas
+  // 2. Reporte por rango de fechas
   async generarReporteFechas(fechaInicio, fechaFin) {
     // 🛡️ Seguro Relacional en Caliente básico
     if (!OrdenServicio.associations.vehiculo) {
@@ -51,7 +76,7 @@ class OrdenServicioService {
     return ordenes;
   }
 
-  // 2. Obtener todas las órdenes con sus relaciones
+  // 3. Obtener todas las órdenes con sus relaciones
   async obtenerTodas() {
     return await OrdenServicio.findAll({
       include: [

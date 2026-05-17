@@ -4,10 +4,16 @@ class OrdenServicioController {
   // 1. Crear una nueva orden
   async crear(req, res) {
     try {
-      const nuevaOrden = await ordenServicioService.crearOrden(req.body);
-      res.status(201).json({ success: true, data: nuevaOrden });
+      const nuevaOrden = await ordenServicioService.crear(req.body);
+      return res.status(201).json({
+        success: true,
+        data: nuevaOrden
+      });
     } catch (error) {
-      res.status(400).json({ success: false, message: error.message });
+      return res.status(400).json({
+        success: false,
+        message: error.message // Aquí viajará el mensaje del carro inactivo 🛡️
+      });
     }
   }
 
