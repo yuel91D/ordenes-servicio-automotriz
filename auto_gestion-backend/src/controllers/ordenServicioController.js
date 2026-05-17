@@ -1,8 +1,8 @@
 const ordenServicioService = require('../services/ordenServicioService');
 
 class OrdenServicioController {
-  // 1. Crear una nueva orden
-  async crear(req, res) {
+  // 1. Crear una nueva orden 
+  async crear(req, res, next) {
     try {
       const nuevaOrden = await ordenServicioService.crear(req.body);
       return res.status(201).json({
@@ -10,63 +10,65 @@ class OrdenServicioController {
         data: nuevaOrden
       });
     } catch (error) {
-      return res.status(400).json({
-        success: false,
-        message: error.message // Aquí viajará el mensaje del carro inactivo 🛡️
-      });
+      next(error); // 🚀 Al middleware global
     }
   }
 
   // 2. Listar todas las órdenes
-  async listar(req, res) {
+  async listar(req, res, next) {
     try {
       const ordenes = await ordenServicioService.obtenerTodas();
-      res.status(200).json({ success: true, data: ordenes });
+      return res.status(200).json({ success: true, data: ordenes });
     } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+      next(error);
     }
   }
 
   // 3. Buscar orden específica por ID
-  async buscarPorId(req, res) {
+  async buscarPorId(req, res, next) {
     try {
       const { id } = req.params;
       const orden = await ordenServicioService.obtenerPorId(id);
-      res.status(200).json({ success: true, data: orden });
+      return res.status(200).json({ success: true, data: orden });
     } catch (error) {
-      const statusCode = error.message.includes('no existe') ? 404 : 400;
-      res.status(statusCode).json({ success: false, message: error.message });
+      // Si el mensaje dice que no existe, le inyectamos un 404 antes de pasarlo al middleware
+      if (error.message.includes('no existe')) {
+        error.statusCode = 404;
+      } else {
+        error.statusCode = 400;
+      }
+      next(error);
     }
   }
 
   // 4. Actualizar Orden (Estructura base)
-  async actualizar(req, res) {
+  async actualizar(req, res, next) {
     try {
-      res.status(200).json({ success: true, message: "Actualizado con éxito" });
+      return res.status(200).json({ success: true, message: "Actualizado con éxito" });
     } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+      next(error);
     }
   }
 
   // 5. Eliminar Orden (Estructura base)
-  async eliminar(req, res) {
+  async eliminar(req, res, next) {
     try {
-      res.status(200).json({ success: true, message: "Eliminado con éxito" });
+      return res.status(200).json({ success: true, message: "Eliminado con éxito" });
     } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+      next(error);
     }
   }
-  // 6. Reporte por Fechas  
-  async obtenerReportePorFechas(req, res) {
+
+  // 6. Reporte por Fechas 🛡️
+  async obtenerReportePorFechas(req, res, next) {
     try {
       const { fecha_inicio, fecha_fin } = req.query;
 
       // Validación rápida de parámetros de consulta
       if (!fecha_inicio || !fecha_fin) {
-        return res.status(400).json({
-          success: false,
-          message: "Faltan parámetros requeridos: 'fecha_inicio' y 'fecha_fin' son obligatorios (Formato: YYYY-MM-DD)."
-        });
+        const errorParams = new Error("Faltan parámetros requeridos: 'fecha_inicio' y 'fecha_fin' son obligatorios (Formato: YYYY-MM-DD).");
+        errorParams.statusCode = 400;
+        return next(errorParams);
       }
 
       const reporte = await ordenServicioService.generarReporteFechas(fecha_inicio, fecha_fin);
@@ -76,14 +78,7 @@ class OrdenServicioController {
         data: reporte
       });
     } catch (error) {
-      // 🌟 REGLA DINÁMICA: Si el servicio le inyectó un statusCode (como el 400), úsalo. 
-      // Si fue otro tipo de error inesperado, usa 500 por defecto.
-      const status = error.statusCode || 500;
-
-      return res.status(status).json({
-        success: false,
-        message: error.message || "Error interno al generar el reporte."
-      });
+      next(error); // Atrapa el statusCode 400 de fechas al revés inyectado en el servicio
     }
   }
 }

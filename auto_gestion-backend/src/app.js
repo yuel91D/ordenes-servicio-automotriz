@@ -8,6 +8,9 @@ const vehiculoRoutes = require('./routes/vehiculoRoutes');
 const ordenServicioRoutes = require('./routes/ordenServicioRoutes');
 const itemOrdenRoutes = require('./routes/itemOrdenRoutes');
 
+// 🌟 PASO 1: Importamos el nuevo recolector global de errores
+const errorMiddleware = require('./middlewares/errorMiddleware');
+
 const app = express();
 
 app.use(cors());
@@ -172,5 +175,8 @@ app.use('/clientes', clienteRoutes);
 app.use('/vehiculos', vehiculoRoutes);
 app.use('/ordenes', ordenServicioRoutes);
 app.use('/items', itemOrdenRoutes);
+
+// 🌟 PASO 2: LA RED DE SEGURIDAD GLOBAL (Siempre debe ir al final de todo)
+app.use(errorMiddleware);
 
 module.exports = app;
