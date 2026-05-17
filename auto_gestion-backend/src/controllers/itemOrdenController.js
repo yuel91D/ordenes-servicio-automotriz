@@ -27,7 +27,8 @@ class ItemOrdenController {
 
   async crear(req, res) {
     try {
-      const item = await itemOrdenService.crearItem(req.body);
+      // 🎯 Cambiamos crearItem por agregarItem para que coincida con el servicio
+      const item = await itemOrdenService.agregarItem(req.body); 
       res.status(201).json({ success: true, data: item });
     } catch (error) {
       res.status(400).json({ success: false, message: error.message });

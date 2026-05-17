@@ -32,26 +32,20 @@ const ordenServicioEsquema = Joi.object({
     'date.format': 'La fecha debe tener un formato ISO válido (AAAA-MM-DD)'
   }),
   tipoOrden: Joi.string().valid('Preventivo', 'Correctivo').required().messages({
-    'any.only': 'El tipo de orden debe ser Preventivo o Correctivo'
+  'any.only': 'El tipo de orden debe ser Preventivo o Correctivo'
   }),
   vehiculo_id: Joi.number().integer().required()
 });
 
-// 🔧 Molde para Ítems de Orden
+// 🛠️ Molde para Ítems de Orden
 const itemOrdenEsquema = Joi.object({
-  descripcion: Joi.string().min(3).required().messages({
-    'string.empty': 'La descripción del ítem es obligatoria'
-  }),
-  cantidad: Joi.number().integer().min(1).default(1),
-  valorUnitario: Joi.number().positive().required().messages({
-    'number.positive': 'El valor unitario debe ser un número mayor a 0'
-  }),
-  orden_servicio_id: Joi.number().integer().required()
+  orden_servicio_id: Joi.number().integer().required(),
+  descripcion: Joi.string().required(),
+  cantidad: Joi.number().integer().min(1).required(),
+  precio_unitario: Joi.number().precision(2).required()
 });
 
 module.exports = {
-  clienteEsquema,
-  vehiculoEsquema,
   ordenServicioEsquema,
   itemOrdenEsquema
 };

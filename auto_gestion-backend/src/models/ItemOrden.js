@@ -8,6 +8,12 @@ const ItemOrden = sequelize.define('ItemOrden', {
     primaryKey: true,
     field: 'item_orden_id' // 🔥 Sincronizado con MySQL
   },
+  // 👇 AGREGAMOS ESTE BLOQUE CRÍTICO PARA LA RELACIÓN
+  ordenServicioId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    field: 'orden_servicio_id' // 🔥 Sincronizado con el nombre real en MySQL
+  },
   descripcion: {
     type: DataTypes.STRING(255),
     allowNull: false
