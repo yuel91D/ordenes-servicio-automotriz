@@ -1,5 +1,3 @@
-const ordenServicioRepository = require('../repositories/ordenServicioRepository');
-
 // 1. Importamos los modelos reales directo desde su archivo fuente
 const { Op } = require('sequelize');
 const OrdenServicio = require('../models/OrdenServicio');
@@ -16,9 +14,8 @@ if (!OrdenServicio.associations || !OrdenServicio.associations.items) {
 
 class OrdenServicioService {
 
- // 🚀 Crear Orden con Validación de Vehículo Activo
+  // 🚀 1. Crear Orden con Validación de Vehículo Activo
   async crear(datosOrden) {
-    // 🌟 Leemos directamente 'vehiculo_id' que es lo que pasa limpio por el validador
     const { vehiculo_id } = datosOrden; 
 
     if (!vehiculo_id) {
@@ -37,13 +34,17 @@ class OrdenServicioService {
       throw new Error(`No se puede registrar la orden: El vehículo se encuentra INACTIVO en el sistema.`);
     }
 
-    // 🏎️ Si el vehículo está activo, procede a guardarse en la base de datos
-    return await ordenServicioRepository.crear(datosOrden);
+    // 🏎️ CAMINO FELIZ: Si está activo, usamos el modelo Sequelize DIRECTO para evitar el undefined
+    // Mapeamos 'vehiculo_id' a la columna interna que espera Sequelize si es necesario
+    return await OrdenServicio.create({
+      fecha: datosOrden.fecha,
+      tipoOrden: datosOrden.tipoOrden,
+      vehiculoId: vehiculo_id // Sincronizado con tu llave foránea del modelo
+    });
   }
   
-  // 2. Reporte por rango de fechas
+  // 📊 2. Reporte por rango de fechas
   async generarReporteFechas(fechaInicio, fechaFin) {
-    // 🛡️ Seguro Relacional en Caliente básico
     if (!OrdenServicio.associations.vehiculo) {
       OrdenServicio.belongsTo(Vehiculos, { foreignKey: 'vehiculo_id', as: 'vehiculo' });
     }
@@ -51,32 +52,23 @@ class OrdenServicioService {
       OrdenServicio.hasMany(ItemOrden, { foreignKey: 'ordenServicioId', as: 'items' }); 
     }
 
-    // 🔍 Consulta robusta a MySQL con tu campo REAL 'fecha'
     const ordenes = await OrdenServicio.findAll({
       where: {
-        // 🌟 ¡Tu campo real mapeado del modelo!
         fecha: {
           [Op.between]: [fechaInicio, fechaFin]
         }
       },
       include: [
-        {
-          model: Vehiculos,
-          as: 'vehiculo'
-        },
-        {
-          model: ItemOrden,
-          as: 'items'
-        }
+        { model: Vehiculos, as: 'vehiculo' },
+        { model: ItemOrden, as: 'items' }
       ],
-      // 🌟 Ordenamos por tu campo real
       order: [['fecha', 'DESC']] 
     });
 
     return ordenes;
   }
 
-  // 3. Obtener todas las órdenes con sus relaciones
+  // 📋 3. Obtener todas las órdenes con sus relaciones
   async obtenerTodas() {
     return await OrdenServicio.findAll({
       include: [
@@ -86,7 +78,7 @@ class OrdenServicioService {
     });
   }
 
-  // 3. Obtener una sola orden detallada por ID
+  // 🔍 4. Obtener una sola orden detallada por ID
   async obtenerPorId(id) {
     const orden = await OrdenServicio.findByPk(id, {
       include: [
