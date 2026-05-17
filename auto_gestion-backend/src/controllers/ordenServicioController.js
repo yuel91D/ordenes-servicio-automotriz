@@ -76,7 +76,11 @@ class OrdenServicioController {
         data: reporte
       });
     } catch (error) {
-      return res.status(500).json({
+      // 🌟 REGLA DINÁMICA: Si el servicio le inyectó un statusCode (como el 400), úsalo. 
+      // Si fue otro tipo de error inesperado, usa 500 por defecto.
+      const status = error.statusCode || 500;
+
+      return res.status(status).json({
         success: false,
         message: error.message || "Error interno al generar el reporte."
       });

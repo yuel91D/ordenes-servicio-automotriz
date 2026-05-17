@@ -43,8 +43,16 @@ class OrdenServicioService {
     });
   }
   
-  // 📊 2. Reporte por rango de fechas
+  // 📊 2. Reporte por rango de fechas (¡Ahora a prueba de despistados! 🛡️)
   async generarReporteFechas(fechaInicio, fechaFin) {
+    // 🌟 NUEVA VALIDACIÓN: Evitar que la fecha fin sea menor a la de inicio
+    if (new Date(fechaInicio) > new Date(fechaFin)) {
+      const errorFecha = new Error("Error en el reporte: La fecha de inicio no puede ser mayor que la fecha de fin.");
+      errorFecha.statusCode = 400; // Le marcamos el código de error para el controlador
+      throw errorFecha;
+    }
+
+    // El resto del código se queda exactamente igual como ya te funcionaba:
     if (!OrdenServicio.associations.vehiculo) {
       OrdenServicio.belongsTo(Vehiculos, { foreignKey: 'vehiculo_id', as: 'vehiculo' });
     }
