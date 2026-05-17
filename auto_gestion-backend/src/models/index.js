@@ -1,23 +1,62 @@
-const Cliente = require('./cliente');
-const Vehiculos = require('./Vehiculos');
-const OrdenServicio = require('./OrdenServicio');
-const ItemOrden = require('./ItemOrden');
+const ordenServicioRepository = require('../repositories/ordenServicioRepository');
 
-// 1. Relación Cliente <-> Vehículos
-Cliente.hasMany(Vehiculos, { foreignKey: 'cliente_id', as: 'vehiculos' });
-Vehiculos.belongsTo(Cliente, { foreignKey: 'cliente_id', as: 'cliente' });
+// 🌟 Importamos los modelos directamente desde su archivo fuente para asegurar que no sean undefined
+const OrdenServicio = require('../models/OrdenServicio');
+const Vehiculos = require('../models/Vehiculos');
+const ItemOrden = require('../models/ItemOrden');
 
-// 2. Relación Vehículos <-> OrdenServicio
-Vehiculos.hasMany(OrdenServicio, { foreignKey: 'vehiculo_id', as: 'ordenes' });
-OrdenServicio.belongsTo(Vehiculos, { foreignKey: 'vehiculo_id', as: 'vehiculo' });
+class OrdenServicioService {
+  // 1. Crear Orden
+  async crearOrden(datos) {
+    const { vehiculo_id } = datos;
 
-// 3. Relación OrdenServicio <-> ItemOrden (¡Esta es la que fallaba al buscar el ID!)
-OrdenServicio.hasMany(ItemOrden, { foreignKey: 'orden_servicio_id', as: 'items' });
-ItemOrden.belongsTo(OrdenServicio, { foreignKey: 'orden_servicio_id', as: 'orden' });
+    if (!Vehiculos) {
+      throw new Error('El modelo "Vehiculos" no está correctamente cargado.');
+    }
 
-module.exports = {
-  Cliente,
-  Vehiculos,
-  OrdenServicio,
-  ItemOrden
-};
+    const vehiculo = await Vehiculos.findByPk(vehiculo_id);
+    if (!vehiculo) {
+      throw new Error('El vehículo especificado no existe.');
+    }
+
+    console.log("=== DATOS DEL VEHÍCULO ENCONTRADO ===");
+    console.log("ID:", vehiculo.id);
+    console.log("Estado en BD:", vehiculo.estado);
+
+    const estadoVehiculo = vehiculo.estado ? String(vehiculo.estado).toLowerCase().trim() : '';
+
+    if (estadoVehiculo === 'inactivo' || vehiculo.activo === false || vehiculo.activo === 0) {
+      throw new Error('No se puede crear la orden: El vehículo se encuentra INACTIVO.');
+    }
+
+    return await ordenServicioRepository.crear(datos);
+  }
+
+  // 2. Obtener todas las órdenes con sus relaciones
+  async obtenerTodas() {
+    return await OrdenServicio.findAll({
+      include: [
+        { model: Vehiculos, as: 'vehiculo' },
+        { model: ItemOrden, as: 'items' }
+      ]
+    });
+  }
+
+  // 3. Obtener una sola orden detallada por ID
+  async obtenerPorId(id) {
+    const orden = await OrdenServicio.findByPk(id, {
+      include: [
+        { model: Vehiculos, as: 'vehiculo' },
+        { model: ItemOrden, as: 'items' }
+      ]
+    });
+
+    if (!orden) {
+      throw new Error(`La orden de servicio con ID ${id} no existe en el sistema.`);
+    }
+
+    return orden;
+  }
+}
+
+module.exports = new OrdenServicioService();

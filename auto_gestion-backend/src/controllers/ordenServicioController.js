@@ -1,35 +1,39 @@
 const ordenServicioService = require('../services/ordenServicioService');
 
 class OrdenServicioController {
-  // 1. Crear Orden (Con nuestro escudo de Vehículo Inactivo)
+  // 1. Crear una nueva orden
   async crear(req, res) {
     try {
-      const orden = await ordenServicioService.crearOrden(req.body);
-      res.status(201).json({ success: true, data: orden });
+      const nuevaOrden = await ordenServicioService.crearOrden(req.body);
+      res.status(201).json({ success: true, data: nuevaOrden });
     } catch (error) {
       res.status(400).json({ success: false, message: error.message });
     }
   }
 
-  // 2. Listar Órdenes
+  // 2. Listar todas las órdenes
   async listar(req, res) {
     try {
-      res.status(200).json({ success: true, data: [] });
+      const ordenes = await ordenServicioService.obtenerTodas();
+      res.status(200).json({ success: true, data: ordenes });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
   }
 
-  // 3. 🎯 AQUÍ ESTÁ EL TRUCO: Se debe llamar "obtener" para tus rutas
-  async obtener(req, res) {
+  // 3. Buscar orden específica por ID
+  async buscarPorId(req, res) {
     try {
-      res.status(200).json({ success: true, data: null });
+      const { id } = req.params;
+      const orden = await ordenServicioService.obtenerPorId(id);
+      res.status(200).json({ success: true, data: orden });
     } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+      const statusCode = error.message.includes('no existe') ? 404 : 400;
+      res.status(statusCode).json({ success: false, message: error.message });
     }
   }
 
-  // 4. Actualizar Orden
+  // 4. Actualizar Orden (Estructura base)
   async actualizar(req, res) {
     try {
       res.status(200).json({ success: true, message: "Actualizado con éxito" });
@@ -38,7 +42,7 @@ class OrdenServicioController {
     }
   }
 
-  // 5. Eliminar Orden
+  // 5. Eliminar Orden (Estructura base)
   async eliminar(req, res) {
     try {
       res.status(200).json({ success: true, message: "Eliminado con éxito" });
