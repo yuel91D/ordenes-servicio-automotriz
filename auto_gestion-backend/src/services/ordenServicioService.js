@@ -1,33 +1,40 @@
 const ordenServicioRepository = require('../repositories/ordenServicioRepository');
+// 🎯 Volvemos a importar la carpeta completa de modelos
+const db = require('../models'); 
 
 class OrdenServicioService {
-  async listarOrdenes() {
-    return await ordenServicioRepository.obtenerTodos();
-  }
+  async crearOrden(datos) {
+    const { vehiculo_id } = datos;
 
-  async obtenerOrden(id) {
-    const orden = await ordenServicioRepository.obtenerPorId(id);
-    if (!orden) throw new Error('Orden de servicio no encontrada');
-    return orden;
-  }
+    // Extraemos el modelo Vehiculo de forma segura (probando mayúsculas/minúsculas si es necesario)
+    const Vehiculo = db.Vehiculo || db.vehiculo || db.Vehiculos;
 
-  async crearOrden(data) {
-    if (!data.vehiculo_id) {
-      throw new Error('El ID del vehículo es obligatorio para generar una orden');
+    if (!Vehiculo) {
+      throw new Error('El modelo "Vehiculo" no está correctamente cargado o exportado en la carpeta de modelos.');
     }
-    return await ordenServicioRepository.crear(data);
-  }
 
-  async actualizarOrden(id, data) {
-    const orden = await ordenServicioRepository.actualizar(id, data);
-    if (!orden) throw new Error('Orden no encontrada para actualizar');
-    return orden;
-  }
+    // 1. Buscar el vehículo en la base de datos
+    const vehiculo = await Vehiculo.findByPk(vehiculo_id);
+    
+    if (!vehiculo) {
+      throw new Error('El vehículo especificado no existe.');
+    }
 
-  async eliminarOrden(id) {
-    const eliminado = await ordenServicioRepository.eliminar(id);
-    if (!eliminado) throw new Error('Orden no encontrada para eliminar');
-    return true;
+    // 🔍 CHISMOSO DE CONTROL: Veremos qué trae en la consola flotante
+    console.log("=== DATOS DEL VEHÍCULO ENCONTRADO ===");
+    console.log("ID:", vehiculo.id);
+    console.log("Estado en BD:", vehiculo.estado);
+
+    // Convertimos a minúsculas para evitar problemas de formato
+    const estadoVehiculo = vehiculo.estado ? String(vehiculo.estado).toLowerCase().trim() : '';
+
+    // 2. 🛡️ REGLA DE NEGOCIO: Validar si está inactivo
+    if (estadoVehiculo === 'inactivo' || vehiculo.activo === false || vehiculo.activo === 0) {
+      throw new Error('No se puede crear la orden: El vehículo se encuentra INACTIVO.');
+    }
+
+    // 3. Si pasa la validación, se crea de forma segura
+    return await ordenServicioRepository.crear(datos);
   }
 }
 
