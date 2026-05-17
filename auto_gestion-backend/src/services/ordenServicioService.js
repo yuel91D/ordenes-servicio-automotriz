@@ -1,8 +1,8 @@
 // 1. Importamos los modelos reales directo desde su archivo fuente
 const { Op } = require('sequelize');
-const OrdenServicio = require('../models/OrdenServicio');
-const Vehiculos = require('../models/Vehiculos');
-const ItemOrden = require('../models/ItemOrden');
+const OrdenServicio = require('../models/ordenServicio');
+const Vehiculos = require('../models/vehiculos');
+const ItemOrden = require('../models/itemOrden');
 
 // 2. 🛡️ SEGURO ANTIFALLAS: Forzamos la declaración manual de relaciones aquí mismo
 if (!OrdenServicio.associations || !OrdenServicio.associations.vehiculo) {

@@ -2,7 +2,7 @@
 const { Op } = require('sequelize'); 
 
 // Importación directa y segura para evitar el "undefined"
-const ItemOrden = require('../models/ItemOrden'); 
+const ItemOrden = require('../models/itemOrden'); 
 
 class ItemOrdenService {
 

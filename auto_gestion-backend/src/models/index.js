@@ -1,9 +1,9 @@
 const ordenServicioRepository = require('../repositories/ordenServicioRepository');
 
 // 🌟 Importamos los modelos directamente desde su archivo fuente para asegurar que no sean undefined
-const OrdenServicio = require('../models/OrdenServicio');
-const Vehiculos = require('../models/Vehiculos');
-const ItemOrden = require('../models/ItemOrden');
+const OrdenServicio = require('./ordenServicio');
+const Vehiculos = require('./vehiculos');
+const ItemOrden = require('./itemOrden');
 
 class OrdenServicioService {
   // 1. Crear Orden
