@@ -1,20 +1,22 @@
-// 1. Importamos los modelos reales directo desde su archivo fuente
+// src/services/ordenServicioService.js
 const { Op } = require('sequelize');
-const OrdenServicio = require('../models/ordenServicio');
-const Vehiculos = require('../models/vehiculos');
-const ItemOrden = require('../models/itemOrden');
 
-// 2. 🛡️ SEGURO ANTIFALLAS: Forzamos la declaración manual de relaciones aquí mismo
-if (!OrdenServicio.associations || !OrdenServicio.associations.vehiculo) {
-  OrdenServicio.belongsTo(Vehiculos, { foreignKey: 'vehiculo_id', as: 'vehiculo' });
-}
-if (!OrdenServicio.associations || !OrdenServicio.associations.items) {
-  OrdenServicio.hasMany(ItemOrden, { foreignKey: 'ordenServicioId', as: 'items' });
-}
+// 📥 Importamos los repositorios que se conectan a la base de datos
+const ordenServicioRepository = require('../repositories/ordenServicioRepository'); 
+const itemOrdenRepository = require('../repositories/itemOrdenRepository');
+
+// 🌟 SOLUCIÓN AL ERROR POST: Importamos 'Vehiculo' en PascalCase directo del index central
+const { Vehiculo } = require('../models'); 
 
 class OrdenServicioService {
+  
+  // 🌟 El constructor inicializa los repositorios para que el "this" funcione
+  constructor() {
+    this.ordenServicioRepository = ordenServicioRepository;
+    this.itemOrdenRepository = itemOrdenRepository;
+  }
 
-  // 🚀 1. Crear Orden con Validación de Vehículo Activo
+  // 🚀 1. CREAR ORDEN (POST) - ¡Blindado contra el undefined!
   async crear(datosOrden) {
     const { vehiculo_id } = datosOrden; 
 
@@ -22,85 +24,87 @@ class OrdenServicioService {
       throw new Error("Error: No se proporcionó un 'vehiculo_id' en la petición.");
     }
 
-    // 🔍 Candado 1: Buscar el vehículo usando el ID en MySQL
-    const vehiculo = await Vehiculos.findByPk(vehiculo_id);
+    // 🔍 Ahora 'Vehiculo' sí existe y resolverá la consulta perfectamente sin romperse
+    const vehiculo = await Vehiculo.findByPk(vehiculo_id);
 
     if (!vehiculo) {
       throw new Error(`Error: El vehículo con ID ${vehiculo_id} no está registrado en el sistema.`);
     }
 
-    // 🛡️ Candado 2: VALIDACIÓN CHECKLIST (Frenar si está inactivo)
-    if (vehiculo.estado === 'inactivo') {
+    // 🛡️ VALIDACIÓN: Frenar si está inactivo
+    const estadoVehiculo = vehiculo.estado ? String(vehiculo.estado).toLowerCase().trim() : '';
+    if (estadoVehiculo === 'inactivo') {
       throw new Error(`No se puede registrar la orden: El vehículo se encuentra INACTIVO en el sistema.`);
     }
 
-    // 🏎️ CAMINO FELIZ: Si está activo, usamos el modelo Sequelize DIRECTO para evitar el undefined
-    // Mapeamos 'vehiculo_id' a la columna interna que espera Sequelize si es necesario
-    return await OrdenServicio.create({
+    // 🏎️ CAMINO FELIZ: Delega la creación a tu repositorio estructurado
+    return await this.ordenServicioRepository.crear({
       fecha: datosOrden.fecha,
       tipoOrden: datosOrden.tipoOrden,
-      vehiculoId: vehiculo_id // Sincronizado con tu llave foránea del modelo
+      vehiculoId: vehiculo_id
     });
   }
   
-  // 📊 2. Reporte por rango de fechas (¡Ahora a prueba de despistados! 🛡️)
+  // 📋 2. OBTENER TODAS LAS ÓRDENES (GET) - ¡Ya verificado con un 200 OK!
+  async obtenerTodas() {
+    return await this.ordenServicioRepository.obtenerTodas(); 
+  }
+
+  // 🔍 3. OBTENER ORDEN DETALLADA POR ID (GET :id)
+  async obtenerPorId(id) {
+    try {
+      const orden = await this.ordenServicioRepository.buscarPorId(id);
+      
+      if (!orden) {
+        throw new Error(`La orden de servicio con ID ${id} no existe.`);
+      }
+
+      const items = await this.itemOrdenRepository.buscarPorOrdenId(id);
+      const ordenData = typeof orden.toJSON === 'function' ? orden.toJSON() : orden;
+
+      return {
+        ...ordenData,
+        items: items || [] 
+      };
+    } catch (error) {
+      throw error; 
+    }
+  }
+
+  // 🔄 4. ACTUALIZAR ORDEN (PUT) - ¡NUEVO!
+  async actualizar(id, datosActualizados) {
+    // 🔍 Opcional: Si el PUT incluye cambio de vehículo, se podría re-validar aquí.
+    const ordenActualizada = await this.ordenServicioRepository.actualizar(id, datosActualizados);
+    
+    if (!ordenActualizada) {
+      throw new Error(`No se puede actualizar: La orden con ID ${id} no existe en el sistema.`);
+    }
+    
+    return ordenActualizada;
+  }
+
+  // 🗑️ 5. ELIMINAR ORDEN (DELETE) - ¡NUEVO!
+  async eliminar(id) {
+    const exito = await this.ordenServicioRepository.eliminar(id);
+    
+    if (!exito) {
+      throw new Error(`No se puede eliminar: La orden con ID ${id} no existe en el sistema.`);
+    }
+    
+    return { success: true, message: `La orden ${id} y sus ítems fueron eliminados correctamente.` };
+  }
+  
+  // 📊 6. REPORTE POR RANGO DE FECHAS
   async generarReporteFechas(fechaInicio, fechaFin) {
-    // 🌟 NUEVA VALIDACIÓN: Evitar que la fecha fin sea menor a la de inicio
     if (new Date(fechaInicio) > new Date(fechaFin)) {
       const errorFecha = new Error("Error en el reporte: La fecha de inicio no puede ser mayor que la fecha de fin.");
-      errorFecha.statusCode = 400; // Le marcamos el código de error para el controlador
+      errorFecha.statusCode = 400; 
       throw errorFecha;
     }
 
-    // El resto del código se queda exactamente igual como ya te funcionaba:
-    if (!OrdenServicio.associations.vehiculo) {
-      OrdenServicio.belongsTo(Vehiculos, { foreignKey: 'vehiculo_id', as: 'vehiculo' });
-    }
-    if (!OrdenServicio.associations.items) {
-      OrdenServicio.hasMany(ItemOrden, { foreignKey: 'ordenServicioId', as: 'items' }); 
-    }
-
-    const ordenes = await OrdenServicio.findAll({
-      where: {
-        fecha: {
-          [Op.between]: [fechaInicio, fechaFin]
-        }
-      },
-      include: [
-        { model: Vehiculos, as: 'vehiculo' },
-        { model: ItemOrden, as: 'items' }
-      ],
-      order: [['fecha', 'DESC']] 
-    });
-
-    return ordenes;
-  }
-
-  // 📋 3. Obtener todas las órdenes con sus relaciones
-  async obtenerTodas() {
-    return await OrdenServicio.findAll({
-      include: [
-        { model: Vehiculos, as: 'vehiculo' },
-        { model: ItemOrden, as: 'items' }
-      ]
-    });
-  }
-
-  // 🔍 4. Obtener una sola orden detallada por ID
-  async obtenerPorId(id) {
-    const orden = await OrdenServicio.findByPk(id, {
-      include: [
-        { model: Vehiculos, as: 'vehiculo' },
-        { model: ItemOrden, as: 'items' }
-      ]
-    });
-
-    if (!orden) {
-      throw new Error(`La orden de servicio con ID ${id} no existe en el sistema.`);
-    }
-
-    return orden;
+    return await this.ordenServicioRepository.obtenerReporteFechas(fechaInicio, fechaFin);
   }
 }
 
+// 🚀 Exportamos la instancia única
 module.exports = new OrdenServicioService();

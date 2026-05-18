@@ -1,86 +1,105 @@
-const vehiculoService = require('../services/vehiculoService');
+const Vehiculo = require('../models/vehiculos');
 
-class VehiculoController {
-  // Aseguramos el nombre 'crear'
-  async crear(req, res) {
-    try {
-      const vehiculo = await vehiculoService.crearVehiculo(req.body);
-      res.status(201).json({
-        success: true,
-        data: vehiculo
-      });
-    } catch (error) {
-      res.status(400).json({
+const crearVehiculo = async (req, res) => {
+  try {
+    const { placa, tipoVehiculo, kilometraje, estado, propietario, cliente_id } = req.body;
+
+    const nuevoVehiculo = await Vehiculo.create({
+      placa,
+      tipoVehiculo,
+      kilometraje,
+      estado,
+      propietario,
+      clienteId: cliente_id // Mapea al camelCase del modelo respetando tu base de datos
+    });
+
+    return res.status(201).json({ success: true, data: nuevoVehiculo });
+
+  } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(409).json({
         success: false,
-        message: error.message
+        message: `La placa '${req.body.placa}' ya está registrada en el taller.`
       });
     }
-  }
 
-  // Aseguramos el nombre 'listar'
-  async listar(req, res) {
-    try {
-      const vehiculos = await vehiculoService.listarVehiculos();
-      res.json({
-        success: true,
-        data: vehiculos
-      });
-    } catch (error) {
-      res.status(500).json({
+    if (error.name === 'SequelizeForeignKeyConstraintError') {
+      return res.status(400).json({
         success: false,
-        message: error.message
+        message: `El cliente_id ${req.body.cliente_id} no existe en la base de datos.`
       });
     }
-  }
 
-  // Aseguramos el nombre 'obtener'
-  async obtener(req, res) {
-    try {
-      const vehiculo = await vehiculoService.obtenerVehiculo(req.params.id);
-      res.json({
-        success: true,
-        data: vehiculo
-      });
-    } catch (error) {
-      res.status(404).json({
-        success: false,
-        message: error.message
-      });
+    console.error("❌ [Error Vehículo]:", error.message);
+    return res.status(500).json({ success: false, message: "Error interno del servidor." });
+  }
+};
+
+// 🌟 CORREGIDO: Ahora recibe obligatoriamente (req, res) en orden nativo de Express
+const actualizarVehiculo = async (req, res) => {
+  try {
+    const { id } = req.params; // 👈 Sacamos el id correctamente de req.params
+    const { placa, tipoVehiculo, kilometraje, estado, propietario, cliente_id } = req.body;
+
+    const datosActualizar = {
+      placa,
+      tipoVehiculo,
+      kilometraje,
+      estado,
+      propietario,
+      ...(cliente_id && { clienteId: cliente_id })
+    };
+
+    const [actualizado] = await Vehiculo.update(datosActualizar, { where: { id } });
+
+    if (!actualizado) {
+      return res.status(404).json({ success: false, message: "Vehículo no encontrado." });
     }
-  }
 
-  // Aseguramos el nombre 'actualizar'
-  async actualizar(req, res) {
-    try {
-      const vehiculo = await vehiculoService.actualizarVehiculo(req.params.id, req.body);
-      res.json({
-        success: true,
-        data: vehiculo
-      });
-    } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: error.message
-      });
+    const vehiculoEditado = await Vehiculo.findByPk(id);
+    return res.status(200).json({ success: true, data: vehiculoEditado });
+
+  } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(409).json({ success: false, message: "Esa placa ya le pertenece a otro auto." });
     }
+    return res.status(500).json({ success: false, message: "Error al actualizar el vehículo." });
   }
+};
 
-  // Aseguramos el nombre 'eliminar'
-  async eliminar(req, res) {
-    try {
-      await vehiculoService.eliminarVehiculo(req.params.id);
-      res.json({
-        success: true,
-        message: 'Vehículo eliminado'
-      });
-    } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: error.message
-      });
-    }
+const listarVehiculos = async (req, res) => {
+  try {
+    const lista = await Vehiculo.findAll();
+    return res.status(200).json({ success: true, data: lista });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
-}
+};
 
-// Crucial: Exportar una instancia con 'new' para que los métodos existan
-module.exports = new VehiculoController();
+const obtenerVehiculo = async (req, res) => {
+  try {
+    const data = await Vehiculo.findByPk(req.params.id);
+    if (!data) return res.status(404).json({ success: false, message: "No encontrado" });
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const eliminarVehiculo = async (req, res) => {
+  try {
+    const eliminado = await Vehiculo.destroy({ where: { id: req.params.id } });
+    if (!eliminado) return res.status(404).json({ success: false, message: "No encontrado" });
+    return res.status(200).json({ success: true, message: "Vehículo eliminado correctamente" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = {
+  crear: crearVehiculo,
+  actualizar: actualizarVehiculo,
+  listar: listarVehiculos,
+  obtener: obtenerVehiculo,
+  eliminar: eliminarVehiculo
+};

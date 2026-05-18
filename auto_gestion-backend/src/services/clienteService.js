@@ -11,15 +11,12 @@ class ClienteService {
     return cliente;
   }
 
-  async crearCliente(data) {
-    if (!data.nombre) {
-      throw new Error('El nombre del cliente es obligatorio');
-    }
-    return await clienteRepository.crear(data);
+  async crearCliente(datos) {
+    return await clienteRepository.crear(datos);
   }
 
-  async actualizarCliente(id, data) {
-    const cliente = await clienteRepository.actualizar(id, data);
+  async actualizarCliente(id, datos) {
+    const cliente = await clienteRepository.actualizar(id, datos);
     if (!cliente) throw new Error('Cliente no encontrado para actualizar');
     return cliente;
   }

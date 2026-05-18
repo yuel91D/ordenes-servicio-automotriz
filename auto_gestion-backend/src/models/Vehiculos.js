@@ -1,30 +1,45 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Cliente = require('./cliente'); // 👈 Importamos el cliente para amarrar la relación
 
-const Vehiculo = sequelize.define('Vehiculo', { // 🌟 Registrar en singular ayuda a Sequelize con los alias internos
+const Vehiculo = sequelize.define('Vehiculo', {
   id: {
     type: DataTypes.INTEGER,
-    autoIncrement: true,
     primaryKey: true,
-    field: 'vehiculos_id' 
+    autoIncrement: true,
+    field: 'vehiculos_id' // 🌟 EXACTO como en tu captura: vehiculos_id
   },
-  // ... conserva aquí abajo tus propiedades de placa, kilometraje, etc ...
-  estado: {
-    type: DataTypes.ENUM('activo', 'inactivo'),
+  placa: {
+    type: DataTypes.STRING,
     allowNull: false
+  },
+  tipoVehiculo: {
+    type: DataTypes.STRING,
+    field: 'tipo_vehiculo' // 🌟 Sincronizado con tipo_vehiculo
+  },
+  kilometraje: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  estado: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  propietario: {
+    type: DataTypes.STRING
   },
   clienteId: {
     type: DataTypes.INTEGER,
     allowNull: true,
-    field: 'cliente_id'
+    field: 'cliente_id' // 🌟 cliente_id
   }
 }, {
   tableName: 'vehiculos',
   timestamps: false
 });
 
-// 🔗 RELACIÓN: Un vehículo pertenece a un cliente
-Vehiculo.belongsTo(Cliente, { as: 'cliente', foreignKey: 'clienteId' });
+Vehiculo.associate = (models) => {
+  Vehiculo.belongsTo(models.Cliente, { as: 'cliente', foreignKey: 'cliente_id' });
+  Vehiculo.hasMany(models.OrdenServicio, { as: 'ordenes', foreignKey: 'vehiculo_id' });
+};
 
 module.exports = Vehiculo;

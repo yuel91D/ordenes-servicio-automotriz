@@ -1,14 +1,21 @@
 const express = require('express');
 const router = express.Router();
+
+// 🌟 CORREGIDO: Una sola importación limpia del controlador
 const vehiculoController = require('../controllers/vehiculoController');
 
-// 🛡️ Apuntamos a la carpeta utils
-const validarEsquema = require('../middlewares/validarMiddleware');
-const { vehiculoEsquema } = require('../utils/validators/esquemas'); // 🔥 Agregamos /validators
+const validarEsquema = require('../middlewares/validarMiddleware'); 
 
+// 🌟 CORREGIDO: Traemos ambos esquemas de vehículos desde tu archivo
+const { vehiculoEsquema, vehiculoUpdateEsquema } = require('../utils/validators/esquemas'); 
+
+// 🚗 Ruta para CREAR Vehículo
 router.post('/', validarEsquema(vehiculoEsquema), vehiculoController.crear);
-router.put('/:id', validarEsquema(vehiculoEsquema), vehiculoController.actualizar);
 
+// 🔄 Ruta para ACTUALIZAR Vehículo (Ahora sí con su esquema opcional)
+router.put('/:id', validarEsquema(vehiculoUpdateEsquema), vehiculoController.actualizar);
+
+// Otras rutas estándar
 router.get('/', vehiculoController.listar);
 router.get('/:id', vehiculoController.obtener);
 router.delete('/:id', vehiculoController.eliminar);

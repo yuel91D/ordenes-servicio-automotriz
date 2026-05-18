@@ -1,15 +1,18 @@
-const { Cliente, Vehiculos } = require('../models');
+const Cliente = require('../models/cliente');
+const Vehiculo = require('../models/vehiculos'); // 🌟 Importado en singular
 
 class ClienteRepository {
   async obtenerTodos() {
     return await Cliente.findAll({
-      include: [{ model: Vehiculos, as: 'vehiculos' }]
+      // ✅ Corregido: Ahora usa la variable 'Vehiculo' que importaste arriba
+      include: [{ model: Vehiculo, as: 'vehiculos' }] 
     });
   }
 
   async obtenerPorId(id) {
     return await Cliente.findByPk(id, {
-      include: [{ model: Vehiculos, as: 'vehiculos' }]
+      // ✅ Corregido aquí también
+      include: [{ model: Vehiculo, as: 'vehiculos' }]
     });
   }
 

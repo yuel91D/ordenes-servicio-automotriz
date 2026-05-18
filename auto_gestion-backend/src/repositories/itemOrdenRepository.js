@@ -7,9 +7,10 @@ class ItemOrdenRepository {
     });
   }
 
-  async obtenerPorId(id) {
-    return await ItemOrden.findByPk(id, {
-      include: [{ model: OrdenServicio, as: 'orden' }]
+  async buscarPorOrdenId(ordenId) {
+    // 🌟 CLAVE PARA TU "2 EN 1": Método para traer los ítems amarrados a una orden
+    return await ItemOrden.findAll({
+      where: { orden_servicio_id: ordenId }
     });
   }
 

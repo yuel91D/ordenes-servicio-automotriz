@@ -4,18 +4,16 @@ const sequelize = require('../config/database');
 const ItemOrden = sequelize.define('ItemOrden', {
   id: {
     type: DataTypes.INTEGER,
-    autoIncrement: true,
     primaryKey: true,
-    field: 'item_orden_id' // 🔥 Sincronizado con MySQL
+    autoIncrement: true,
+    field: 'item_orden_id' // 🌟 Sincronizado: item_orden_id
   },
-  // 👇 AGREGAMOS ESTE BLOQUE CRÍTICO PARA LA RELACIÓN
   ordenServicioId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
-    field: 'orden_servicio_id' // 🔥 Sincronizado con el nombre real en MySQL
+    field: 'orden_servicio_id' // 🌟 Sincronizado: orden_servicio_id
   },
   descripcion: {
-    type: DataTypes.STRING(255),
+    type: DataTypes.STRING,
     allowNull: false
   },
   cantidad: {
@@ -24,12 +22,15 @@ const ItemOrden = sequelize.define('ItemOrden', {
   },
   valorUnitario: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
     field: 'valor_unitario'
   }
 }, {
   tableName: 'items_orden',
   timestamps: false
 });
+
+ItemOrden.associate = (models) => {
+  ItemOrden.belongsTo(models.OrdenServicio, { as: 'ordenServicio', foreignKey: 'orden_servicio_id' });
+};
 
 module.exports = ItemOrden;

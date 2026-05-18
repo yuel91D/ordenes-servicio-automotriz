@@ -1,50 +1,170 @@
-const clienteService = require('../services/clienteService');
+// 🌟 IMPORTACIÓN DIRECTA: Sequelize mapea el modelo como 'Cliente' con mayúscula
+const { Cliente } = require('../models');
 
-class ClienteController {
-  async listar(req, res) {
-    try {
-      const clientes = await clienteService.listarClientes();
-      res.json({ success: true, data: clientes });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+/**
+ * 🎯 Crear un nuevo cliente
+ * POST /clientes
+ */
+const crearCliente = async (req, res) => {
+  try {
+    const { nombre, telefono, email } = req.body;
+
+    // Validación básica de campos obligatorios a nivel controlador
+    if (!nombre) {
+      return res.status(400).json({
+        success: false,
+        message: "El campo nombre es obligatorio."
+      });
     }
-  }
 
-  async obtener(req, res) {
-    try {
-      const cliente = await clienteService.obtenerCliente(req.params.id);
-      res.json({ success: true, data: cliente });
-    } catch (error) {
-      res.status(404).json({ success: false, message: error.message });
+    // Insertamos directo en la base de datos MySQL
+    const nuevoCliente = await Cliente.create({
+      nombre,
+      telefono,
+      email
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: nuevoCliente
+    });
+
+  } catch (error) {
+    console.error("❌ [Error Crear Cliente]:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor al crear el cliente."
+    });
+  }
+};
+
+/**
+ * 📋 Listar todos los clientes
+ * GET /clientes
+ */
+const listarClientes = async (req, res) => {
+  try {
+    const clientes = await Cliente.findAll();
+    
+    return res.status(200).json({
+      success: true,
+      count: clientes.length,
+      data: clientes
+    });
+  } catch (error) {
+    console.error("❌ [Error Listar Clientes]:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor al listar los clientes."
+    });
+  }
+};
+
+/**
+ * 🔍 Obtener un cliente específico por ID
+ * GET /clientes/:id
+ */
+const obtenerCliente = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const cliente = await Cliente.findByPk(id);
+
+    if (!cliente) {
+      return res.status(404).json({
+        success: false,
+        message: `Cliente con ID ${id} no encontrado.`
+      });
     }
-  }
 
-  async crear(req, res) {
-    try {
-      const cliente = await clienteService.crearCliente(req.body);
-      res.status(201).json({ success: true, data: cliente });
-    } catch (error) {
-      res.status(400).json({ success: false, message: error.message });
+    return res.status(200).json({
+      success: true,
+      data: cliente
+    });
+  } catch (error) {
+    console.error("❌ [Error Obtener Cliente]:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor al obtener el cliente."
+    });
+  }
+};
+
+/**
+ * 🔄 Actualizar datos de un cliente
+ * PUT /clientes/:id
+ */
+const actualizarCliente = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, telefono, email } = req.body;
+
+    const cliente = await Cliente.findByPk(id);
+
+    if (!cliente) {
+      return res.status(404).json({
+        success: false,
+        message: `Cliente con ID ${id} no encontrado.`
+      });
     }
-  }
 
-  async actualizar(req, res) {
-    try {
-      const cliente = await clienteService.actualizarCliente(req.params.id, req.body);
-      res.json({ success: true, data: cliente });
-    } catch (error) {
-      res.status(400).json({ success: false, message: error.message });
+    // Actualizamos los campos en memoria y persistimos en MySQL
+    await cliente.update({
+      nombre: nombre || cliente.nombre,
+      telefono: telefono !== undefined ? telefono : cliente.telefono,
+      email: email !== undefined ? email : cliente.email
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Cliente actualizado con éxito.",
+      data: cliente
+    });
+  } catch (error) {
+    console.error("❌ [Error Actualizar Cliente]:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor al actualizar el cliente."
+    });
+  }
+};
+
+/**
+ * 🗑️ Eliminar un cliente por ID
+ * DELETE /clientes/:id
+ */
+const eliminarCliente = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const cliente = await Cliente.findByPk(id);
+
+    if (!cliente) {
+      return res.status(404).json({
+        success: false,
+        message: `Cliente con ID ${id} no encontrado.`
+      });
     }
-  }
 
-  async eliminar(req, res) {
-    try {
-      await clienteService.eliminarCliente(req.params.id);
-      res.json({ success: true, message: 'Cliente eliminado correctamente' });
-    } catch (error) {
-      res.status(400).json({ success: false, message: error.message });
-    }
-  }
-}
+    // Borrado físico de la fila en la BD
+    await cliente.destroy();
 
-module.exports = new ClienteController();
+    return res.status(200).json({
+      success: true,
+      message: `Cliente con ID ${id} eliminado correctamente.`
+    });
+  } catch (error) {
+    console.error("❌ [Error Eliminar Cliente]:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor al eliminar el cliente."
+    });
+  }
+};
+
+// 🚀 Exportación limpia mapeada uno a uno con tus rutas
+module.exports = {
+  crear: crearCliente,
+  listar: listarClientes,
+  obtener: obtenerCliente,
+  actualizar: actualizarCliente,
+  eliminar: eliminarCliente
+};

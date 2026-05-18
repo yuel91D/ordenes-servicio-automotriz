@@ -4,25 +4,29 @@ const sequelize = require('../config/database');
 const Cliente = sequelize.define('Cliente', {
   id: {
     type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true
-    // En tu SQL pusiste 'id INT AUTO_INCREMENT', por lo que aquí se llama 'id' directamente
+    primaryKey: true,
+    autoIncrement: true
   },
   nombre: {
-    type: DataTypes.STRING(100),
+    type: DataTypes.STRING,
     allowNull: false
   },
   telefono: {
-    type: DataTypes.STRING(20),
+    type: DataTypes.STRING,
     allowNull: true
   },
   email: {
-    type: DataTypes.STRING(100),
+    type: DataTypes.STRING,
     allowNull: true
   }
 }, {
   tableName: 'clientes',
   timestamps: false
 });
+
+// 🌟 Función estática para asociar de forma segura sin romper Node
+Cliente.associate = (models) => {
+  Cliente.hasMany(models.Vehiculo, { as: 'vehiculos', foreignKey: 'clienteId' });
+};
 
 module.exports = Cliente;
