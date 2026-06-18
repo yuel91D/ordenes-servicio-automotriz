@@ -71,16 +71,18 @@ class OrdenServicioService {
     }
   }
 
-  // 🔄 4. ACTUALIZAR ORDEN (PUT) - ¡NUEVO!
-  async actualizar(id, datosActualizados) {
-    // 🔍 Opcional: Si el PUT incluye cambio de vehículo, se podría re-validar aquí.
-    const ordenActualizada = await this.ordenServicioRepository.actualizar(id, datosActualizados);
+  // 🔄 4. ACTUALIZAR ORDEN (PUT) - CORREGIDO
+  async actualizar(id, datos) {
+    // Usamos el repositorio en lugar de llamar al modelo directamente
+    const resultado = await this.ordenServicioRepository.actualizar(id, datos);
     
-    if (!ordenActualizada) {
-      throw new Error(`No se puede actualizar: La orden con ID ${id} no existe en el sistema.`);
+    // Si tu repositorio devuelve el conteo de filas afectadas (ej. [1])
+    if (resultado[0] === 0) {
+      throw new Error("La orden no existe o no se realizaron cambios.");
     }
     
-    return ordenActualizada;
+    // Retornamos el registro actualizado
+    return await this.ordenServicioRepository.buscarPorId(id);
   }
 
   // 🗑️ 5. ELIMINAR ORDEN (DELETE) - ¡NUEVO!

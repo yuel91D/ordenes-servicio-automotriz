@@ -43,16 +43,18 @@ const vehiculoUpdateEsquema = Joi.object({
   cliente_id: Joi.number().integer().optional()
 });
 
-// 📝 Molde para Órdenes de Servicio
+// 📝 Molde para Órdenes de Servicio (Alineado con la DB)
 const ordenServicioEsquema = Joi.object({
   fecha: Joi.date().iso().required().messages({
     'date.format': 'La fecha debe tener un formato ISO válido (AAAA-MM-DD)'
   }),
-  tipoOrden: Joi.string().valid('Preventivo', 'Correctivo').required().messages({
-    'any.only': 'El tipo de orden debe ser Preventivo o Correctivo'
+  tipoOrden: Joi.string().required().messages({
+    'string.empty': 'El tipo de orden es obligatorio'
   }),
-  vehiculo_id: Joi.number().integer().required()
-});
+  vehiculo_id: Joi.number().integer().required().messages({
+    'any.required': 'La orden debe tener un vehiculo_id válido'
+  })
+}).unknown(true);
 
 // 🛠️ Molde para Ítems de Orden (¡Recuperado!)
 const itemOrdenEsquema = Joi.object({

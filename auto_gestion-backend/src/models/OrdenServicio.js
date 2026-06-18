@@ -14,15 +14,14 @@ const OrdenServicio = sequelize.define('OrdenServicio', {
     type: DataTypes.DATEONLY,
     allowNull: false
   },
-  tipoOrden: {
+ tipo_orden: {
     type: DataTypes.STRING,
-    field: 'tipo_orden'
-  },
-  vehiculoId: {
-    // 1. ¡Crucial! La FK también debe ser BIGINT para acoplarse con la otra tabla
+    field: 'tipo_orden' // Esto es lo único que importa para MySQL
+},
+vehiculo_id: {
     type: DataTypes.BIGINT,
     field: 'vehiculo_id'
-  }
+}
 }, {
   tableName: 'ordenes_servicio',
   timestamps: false,

@@ -44,7 +44,17 @@ class OrdenServicioController {
   // 4. Actualizar Orden (Estructura base)
   async actualizar(req, res, next) {
     try {
-      return res.status(200).json({ success: true, message: "Actualizado con éxito" });
+      const { id } = req.params;
+      const datos = req.body;
+      
+      // Llamamos al servicio para que ejecute el UPDATE real
+      const ordenActualizada = await ordenServicioService.actualizar(id, datos);
+      
+      return res.status(200).json({ 
+        success: true, 
+        message: "Actualizado con éxito",
+        data: ordenActualizada 
+      });
     } catch (error) {
       next(error);
     }
