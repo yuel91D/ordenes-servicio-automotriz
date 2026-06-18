@@ -3,10 +3,11 @@ const sequelize = require('../config/database');
 
 const Vehiculo = sequelize.define('Vehiculo', {
   id: {
-    type: DataTypes.INTEGER,
+    // 1. Pasamos a BIGINT para soportar los 10 dígitos aleatorios
+    type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: true,
-    field: 'vehiculos_id' // 🌟 EXACTO como en tu captura: vehiculos_id
+    autoIncrement: false, // 2. Quitamos la secuencia automática
+    field: 'vehiculos_id'
   },
   placa: {
     type: DataTypes.STRING,
@@ -14,7 +15,7 @@ const Vehiculo = sequelize.define('Vehiculo', {
   },
   tipoVehiculo: {
     type: DataTypes.STRING,
-    field: 'tipo_vehiculo' // 🌟 Sincronizado con tipo_vehiculo
+    field: 'tipo_vehiculo'
   },
   kilometraje: {
     type: DataTypes.INTEGER,
@@ -28,13 +29,36 @@ const Vehiculo = sequelize.define('Vehiculo', {
     type: DataTypes.STRING
   },
   clienteId: {
-    type: DataTypes.INTEGER,
+    // 1. ¡Importante! La FK también muta a BIGINT para encajar con Clientes
+    type: DataTypes.BIGINT,
     allowNull: true,
-    field: 'cliente_id' // 🌟 cliente_id
+    field: 'cliente_id'
   }
 }, {
   tableName: 'vehiculos',
-  timestamps: false
+  timestamps: false,
+
+  // 3. Hook para interceptar la creación del vehículo
+  hooks: {
+    beforeCreate: async (vehiculo, options) => {
+      let idExiste = true;
+      let nuevoId;
+
+      while (idExiste) {
+        // Genera el número aleatorio de 10 dígitos
+        nuevoId = Math.floor(1000000000 + Math.random() * 9000000000);
+
+        // Verificamos que no colisione en la tabla vehiculos
+        const duplicado = await Vehiculo.findByPk(nuevoId);
+        if (!duplicado) {
+          idExiste = false; // ID único encontrado, salimos del bucle
+        }
+      }
+
+      // Seteamos el ID aleatorio antes de guardarlo en MySQL
+      vehiculo.id = nuevoId;
+    }
+  }
 });
 
 Vehiculo.associate = (models) => {
