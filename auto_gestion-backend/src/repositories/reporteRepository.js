@@ -1,37 +1,38 @@
 const { Op } = require('sequelize');
-// 🌟 Importaciones directas usando tu nueva nomenclatura uniforme
-const OrdenServicio = require('../models/ordenServicio');
-const Vehiculo = require('../models/vehiculos');
-const Cliente = require('../models/cliente');
-const ItemOrden = require('../models/itemOrden');
+// Importamos todo desde el index de modelos
+const { OrdenServicio, Vehiculo, Cliente, ItemOrden } = require('../models');
 
 class ReporteRepository {
   async obtenerOrdenesPorRangoFechas(fechaInicio, fechaFin) {
-    return await OrdenServicio.findAll({
-      where: {
-        fecha: {
-          [Op.between]: [fechaInicio, fechaFin]
-        }
-      },
-      order: [['fecha', 'ASC']],
-      // 🔗 Relacionamiento profundo usando los modelos directos
-      include: [
-        {
-          model: Vehiculo,
-          as: 'vehiculo', 
-          include: [
-            {
-              model: Cliente,
-              as: 'cliente' 
-            }
-          ]
+    try {
+      return await OrdenServicio.findAll({
+        where: {
+          fecha: {
+            [Op.between]: [fechaInicio, fechaFin]
+          }
         },
-        {
-          model: ItemOrden,
-          as: 'items' 
-        }
-      ]
-    });
+        order: [['fecha', 'ASC']],
+        include: [
+          {
+            model: Vehiculo,
+            as: 'vehiculo',
+            include: [
+              {
+                model: Cliente,
+                as: 'cliente'
+              }
+            ]
+          },
+          {
+            model: ItemOrden,
+            as: 'items'
+          }
+        ]
+      });
+    } catch (error) {
+      console.error("Error en ReporteRepository (obtenerOrdenesPorRangoFechas):", error);
+      throw new Error('Error al consultar los datos del reporte en la base de datos.');
+    }
   }
 }
 

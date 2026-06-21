@@ -3,12 +3,14 @@ const Cliente = require('./cliente');
 const Vehiculo = require('./vehiculos');
 const OrdenServicio = require('./ordenServicio');
 const ItemOrden = require('./itemOrden');
+const Exportacion = require('./exportacion');
 
 const models = {
   Cliente,
   Vehiculo,
   OrdenServicio,
-  ItemOrden
+  ItemOrden,
+  Exportacion
 };
 
 // 🔄 Ejecuta las asociaciones de forma automática y segura
