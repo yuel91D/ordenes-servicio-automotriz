@@ -10,7 +10,7 @@ const crearVehiculo = async (req, res) => {
       kilometraje,
       estado,
       propietario,
-      clienteId: cliente_id // Mapea al camelCase del modelo respetando tu base de datos
+      clienteId: cliente_id 
     });
 
     return res.status(201).json({ success: true, data: nuevoVehiculo });
@@ -35,10 +35,9 @@ const crearVehiculo = async (req, res) => {
   }
 };
 
-// 🌟 CORREGIDO: Ahora recibe obligatoriamente (req, res) en orden nativo de Express
 const actualizarVehiculo = async (req, res) => {
   try {
-    const { id } = req.params; // 👈 Sacamos el id correctamente de req.params
+    const { id } = req.params;
     const { placa, tipoVehiculo, kilometraje, estado, propietario, cliente_id } = req.body;
 
     const datosActualizar = {
