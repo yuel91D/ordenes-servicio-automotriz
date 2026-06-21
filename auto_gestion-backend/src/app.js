@@ -1,13 +1,16 @@
+// 1. Imports
 const express = require('express');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
+// 2. Definición de rutas
 const clienteRoutes = require('./routes/clienteRoutes');
 const vehiculoRoutes = require('./routes/vehiculoRoutes');
 const ordenServicioRoutes = require('./routes/ordenServicioRoutes');
 const itemOrdenRoutes = require('./routes/itemOrdenRoutes');
 const reporteRoutes = require('./routes/reporteRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const errorMiddleware = require('./middlewares/errorMiddleware');
 
@@ -171,6 +174,7 @@ const swaggerDocs = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Rutas de la aplicación
+app.use('/auth', authRoutes);
 app.use('/clientes', clienteRoutes);
 app.use('/vehiculos', vehiculoRoutes);
 app.use('/ordenes', ordenServicioRoutes);

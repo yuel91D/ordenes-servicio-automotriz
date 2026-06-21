@@ -1,20 +1,31 @@
+// 1. Imports
 const express = require('express');
 const router = express.Router();
-const clienteController = require('../controllers/clienteController');
-
+const authMiddleware = require('../middlewares/authMiddleware');
+const verificarRol = require('../middlewares/autorizacionMiddleware');
 const validarEsquema = require('../middlewares/validarMiddleware');
-// 🌟 Importamos ambos esquemas
+
+const clienteController = require('../controllers/clienteController');
 const { clienteEsquema, clienteUpdateEsquema } = require('../utils/validators/esquemas');
 
-router.get('/', clienteController.listar);
-// 🛡️ El POST exige todos los campos obligatorios
-router.post('/', validarEsquema(clienteEsquema), clienteController.crear);
+// 2. Middleware Global para este Router
+router.use(authMiddleware);
 
+// 3. Definición de Rutas (Sin duplicados y con roles aplicados)
+
+// Listar: Accesible para admin y vendedor
+router.get('/', verificarRol(['admin', 'vendedor']), clienteController.listar);
+
+// Obtener por ID: Accesible para todos los logueados
 router.get('/:id', clienteController.obtener);
 
-// 🛡️ El PUT ahora usa el esquema flexible
-router.put('/:id', validarEsquema(clienteUpdateEsquema), clienteController.actualizar);
+// Crear: Solo admin y vendedor
+router.post('/', verificarRol(['admin', 'vendedor']), validarEsquema(clienteEsquema), clienteController.crear);
 
-router.delete('/:id', clienteController.eliminar);
+// Actualizar: Solo admin y vendedor
+router.put('/:id', verificarRol(['admin', 'vendedor']), validarEsquema(clienteUpdateEsquema), clienteController.actualizar);
+
+// Eliminar: Solo admin
+router.delete('/:id', verificarRol(['admin']), clienteController.eliminar);
 
 module.exports = router;
