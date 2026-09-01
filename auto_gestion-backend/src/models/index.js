@@ -4,13 +4,15 @@ const Vehiculo = require('./vehiculos');
 const OrdenServicio = require('./ordenServicio');
 const ItemOrden = require('./itemOrden');
 const Exportacion = require('./exportacion');
+const Rol = require('./rol');
 
 const models = {
   Cliente,
   Vehiculo,
   OrdenServicio,
   ItemOrden,
-  Exportacion
+  Exportacion,
+  Rol
 };
 
 // 🔄 Ejecuta las asociaciones de forma automática y segura

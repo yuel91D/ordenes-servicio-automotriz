@@ -3,16 +3,40 @@ require('dotenv').config(); // ¡Esto es indispensable!
 const app = require('./app');
 const sequelize = require('./config/database');
 const Usuario = require('./models/usuario');
-require('dotenv').config();
+const Rol = require('./models/Rol'); // <-- 1. Importamos el modelo Rol
 
 const PORT = process.env.PORT || 3000;
 
 // Sincroniza el modelo con la BD
 sequelize.sync({ alter: true }) // 'alter: true' actualiza la tabla si ya existe
-  .then(() => console.log('✅ Tablas sincronizadas con éxito.'))
+  .then(async () => {
+    console.log('✅ Tablas sincronizadas con éxito.');
+
+    // 2. Insertamos los roles por defecto usando findOrCreate para evitar duplicados
+    try {
+      await Rol.findOrCreate({
+        where: { nombre: 'admin' },
+        defaults: { descripcion: 'Administrador del sistema' }
+      });
+
+      await Rol.findOrCreate({
+        where: { nombre: 'vendedor' },
+        defaults: { descripcion: 'Personal de ventas y atención' }
+      });
+
+      await Rol.findOrCreate({
+        where: { nombre: 'cliente' },
+        defaults: { descripcion: 'Cliente del sistema' }
+      });
+
+      console.log('🛡️ Roles iniciales verificados/creados correctamente.');
+    } catch (error) {
+      console.error('❌ Error al insertar los roles iniciales:', error);
+    }
+  })
   .catch(err => console.error('❌ Error al sincronizar:', err));
 
-// Aquí aplicamos tu excelente idea del .then y .catch
+// Autenticación y encendido del servidor
 sequelize.authenticate()
   .then(() => {
     console.log('📦 Base de datos conectada con Sequelize con éxito.');
