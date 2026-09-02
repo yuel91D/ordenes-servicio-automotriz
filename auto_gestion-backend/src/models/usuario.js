@@ -1,13 +1,13 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Rol = require('./Rol'); // Importamos el modelo Rol para la relación
+const Rol = require('./Rol');
 
 const Usuario = sequelize.define('Usuario', {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
-    field: 'usuario_id' // Opcional, ajusta si tu columna en BD se llama diferente
+    field: 'usuario_id'
   },
   email: {
     type: DataTypes.STRING(100),
@@ -22,18 +22,17 @@ const Usuario = sequelize.define('Usuario', {
   rol_id: {
     type: DataTypes.BIGINT.UNSIGNED,
     allowNull: false,
-    defaultValue: 1, // Asegúrate de que exista un rol con este ID o ajústalo según tu lógica
+    defaultValue: 1,
     field: 'rol_id'
   }
 }, {
   tableName: 'usuarios',
   timestamps: true,
   createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  updated_at: 'updated_at'
 });
 
-// Definición de la asociación
-Usuario.belongsTo(Rol, { foreignKey: 'rol_id', as: 'rol' });
-Rol.hasMany(Usuario, { foreignKey: 'rol_id', as: 'usuarios' });
+// Definimos únicamente la pertenencia del usuario hacia su rol, evitando duplicar el hasMany si ya existe en Rol.js
+Usuario.belongsTo(Rol, { foreignKey: 'rol_id', as: 'rolDelUsuario' });
 
 module.exports = Usuario;

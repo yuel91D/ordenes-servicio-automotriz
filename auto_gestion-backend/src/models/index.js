@@ -4,7 +4,9 @@ const Vehiculo = require('./vehiculos');
 const OrdenServicio = require('./ordenServicio');
 const ItemOrden = require('./itemOrden');
 const Exportacion = require('./exportacion');
+const Usuario = require('./usuario');
 const Rol = require('./rol');
+
 
 const models = {
   Cliente,
@@ -12,6 +14,7 @@ const models = {
   OrdenServicio,
   ItemOrden,
   Exportacion,
+  Usuario,
   Rol
 };
 

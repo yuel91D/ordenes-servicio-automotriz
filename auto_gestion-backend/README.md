@@ -1,60 +1,58 @@
-# 🚗 API de Gestión de Órdenes de Servicio Automotriz
+# Sistema de Órdenes de Servicio Automotriz - Documentación del Proyecto
 
-¡Bienvenido al sistema backend definitivo para el control, monitoreo y facturación de talleres mecánicos! Desarrollado con una arquitectura desacoplada, segura, escalable y estructurada con visión de futuro para una inyección e integración total de una interfaz frontend.
-
-Este sistema permite administrar clientes, vehículos, hojas de servicio y repuestos asignados en tiempo real, garantizando la integridad de los datos mediante validaciones estrictas y consultas optimizadas a la base de datos.
-
----
-
-## 🚀 Características Principales
-
-* **🛡️ Arquitectura Defensiva (Antifallas):** Sincronización limpia de modelos con Sequelize ORM.
-* **⛓️ Cierre de Dependencias Circulares:** Control de flujo optimizado para evitar bucles de memoria en Node.js.
-* **📊 Reportes Inteligentes:** Módulo de filtrado avanzado por rango de fechas (`Op.between`) con candados de seguridad lógicos.
-* **🔒 Candados de Negocio Avanzados:**
-    * Rebote automático si se intenta abrir una orden a un vehículo en estado **INACTIVO**.
-    * Bloqueo preventivo en la capa de servicios si la **Fecha Fin** ingresada es menor a la **Fecha Inicio** (`400 Bad Request`).
-* **🧼 Middleware Global de Errores:** Centralización total de excepciones de Express mediante `next(error)`, respondiendo con estatus HTTP semánticos (`201`, `400`, `404`, `500`).
-* **🔌 Relaciones Complejas (Includes Avanzados):** Recuperación de Órdenes anidadas con sus respectivos Ítems, Vehículo y Dueño en un solo llamado.
-* **📖 Documentación Interactiva (Swagger):** UI autogenerada y mapeada en JSON para pruebas rápidas desde el navegador.
+## 1. Arquitectura del Proyecto
+El proyecto sigue una arquitectura **MVC (Modelo-Vista-Controlador)** desacoplada, orientada a servicios backend con una API REST robusta. 
+- **Capa de Base de Datos:** MySQL gestionado a través de **Sequelize ORM**, asegurando integridad referencial estricta, mapeo de modelos en `snake_case` y sincronización automatizada.
+- **Capa de Enrutamiento y Controladores:** Estructura modular para manejar usuarios, roles, clientes, vehículos y órdenes de servicio.
+- **Control de Acceso:** Sistema basado en Roles (**RBAC**) con relaciones relacionales normalizadas por medio de llaves foráneas (`rol_id`).
 
 ---
 
-## 🗺️ Roadmap & Visión de Futuro (Preparado para Frontend)
-
-Este repositorio está diseñado bajo el principio de **Separación de Responsabilidades (SoC)**. El núcleo de la API está blindado y listo para integrarse sin fricciones con cualquier tecnología Frontend moderna (React, Vue, Angular o Vanilla JS):
-
-* **🔌 CORS Totalmente Configurado:** Servidor con el middleware `cors()` activo, permitiendo peticiones asíncronas seguras (`fetch` / `axios`) desde entornos locales de desarrollo (Vite, Webpack, etc).
-* **📦 Respuestas JSON Estandarizadas:** Cada endpoint responde con una estructura predecible (`success`, `data`, `message`), ideal para que los interceptores del Frontend manejen el estado global y las alertas visuales con suavidad.
-* **🎨 Próxima Inyección Frontend:** Se proyecta la creación de la carpeta `/frontend` para montar un panel administrativo interactivo que consuma estos servicios en tiempo real, permitiendo a los usuarios gestionar el taller de manera visual.
-
----
-
-## 🛠️ Tecnologías Utilizadas
-
-* **Entorno de Ejecución:** Node.js
-* **Framework Web:** Express.js
-* **Base de Datos:** MySQL
-* **Mapeo Objeto-Relacional (ORM):** Sequelize
-* **Validación de Esquemas:** Joi / Validator.js
-* **Documentación de API:** Swagger UI Express & Swagger JSDoc
-* **Pruebas de Integración:** Postman
+## 2. Tecnologías y Dependencias
+- **Entorno de Ejecución:** Node.js
+- **Framework Web:** Express.js
+- **Base de Datos:** MySQL
+- **ORM:** Sequelize
+- **Gestión de Entorno:** dotenv
+- **Herramientas de Desarrollo:** Nodemon (recarga en caliente)
 
 ---
 
-## 📦 Estructura del Proyecto
+## 3. Archivos y Módulos Clave Configurados
+- `src/index.js`: Archivo principal que inicializa el servidor, autentica la conexión a Sequelize, sincroniza los modelos y ejecuta la siembra inicial (seeders) de roles.
+- `src/app.js`: Configuración de middlewares y rutas globales de la aplicación Express.
+- `src/config/database.js`: Conexión centralizada a la base de datos MySQL con variables de entorno.
+- `src/models/Rol.js`: Modelo Sequelize para la tabla `roles` con soporte de timestamps y mapeo explícito de campos.
+- `src/models/usuario.js`: Modelo Sequelize para la gestión de usuarios y su relación asociativa con los roles.
 
-```text
-├── backend/                # 🚀 Capa actual de la API (Node.js + Express)
-│   ├── src/
-│   │   ├── config/         # Configuración de base de datos y Swagger
-│   │   ├── controllers/    # Controladores (Manejo de req, res y next)
-│   │   ├── middlewares/    # Validaciones Joi y Middleware de Errores Globales
-│   │   ├── models/         # Modelos Sequelize (MySQL)
-│   │   ├── routes/         # Enrutadores de Express
-│   │   └── services/       # Lógica de negocio y Candados de Seguridad
-│   ├── app.js              # Inicialización de Express y Red de seguridad
-│   └── server.js           # Arranque oficial del servidor backend
-│
-├── frontend/               # 🎨 ¡Próximamente! (Capa de Interfaz de Usuario)
-│   └── ...                 # Estructura del cliente web (React / Vue / Vanilla JS)
+---
+
+## 4. Endpoints y Funcionalidades del Sistema
+- **Módulo de Autenticación / Roles:**
+  - Inserción automática de roles por defecto al arrancar el servidor (`admin`, `vendedor`, `cliente`).
+  - Relación relacional integrada (`hasMany` / `belongsTo`) entre `Usuarios` y `Roles` mediante `rol_id`.
+- **Módulos Operativos (Automotriz):**
+  - Gestión de Clientes, Empleados, Vehículos, Órdenes de Servicio y Exportaciones de reportes.
+
+---
+
+## 5. Comandos de Ejecución
+- **Instalación de dependencias:**
+  ```bash
+  npm install
+  ```
+- **Iniciar servidor en modo desarrollo (con Nodemon):**
+  ```bash
+  npm run dev
+  ```
+- **Iniciar en producción:**
+  ```bash
+  npm start
+  ```
+
+---
+
+## 6. Tareas Pendientes y Próximos Pasos
+- [ ] Actualizar la colección de **Postman** para migrar las peticiones de creación y actualización de usuarios del antiguo campo de texto (`rol`) al nuevo formato numérico por identificador (`rol_id`).
+- [ ] Implementar los controladores y rutas de validación JWT para la protección de endpoints bajo el modelo RBAC.
+- [ ] Ampliar los módulos de órdenes de servicio y generación de reportes en múltiples formatos (CSV, XLSX, PDF, HTML).
