@@ -19,9 +19,9 @@ const Rol = sequelize.define('Rol', {
   }
 }, {
   tableName: 'roles',
-  timestamps: true,       // Sequelize activará la gestión automática
-  createdAt: 'created_at',  // Mapea con tu columna en snake_case
-  updated_at: 'updated_at'  // Mapea con tu columna en snake_case
+  timestamps: true,
+  createdAt: 'created_at', 
+  updatedAt: 'updatedAt' // O 'updated_at' dependiendo de cómo esté exactamente en MySQL Workbench
 });
 
 Rol.associate = (models) => {
