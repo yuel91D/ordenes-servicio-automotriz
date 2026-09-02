@@ -11,6 +11,7 @@ const ordenServicioRoutes = require('./routes/ordenServicioRoutes');
 const itemOrdenRoutes = require('./routes/itemOrdenRoutes');
 const reporteRoutes = require('./routes/reporteRoutes');
 const authRoutes = require('./routes/authRoutes');
+const rolRoutes = require('./routes/rolRoutes');
 
 const errorMiddleware = require('./middlewares/errorMiddleware');
 
@@ -180,6 +181,7 @@ app.use('/vehiculos', vehiculoRoutes);
 app.use('/ordenes', ordenServicioRoutes);
 app.use('/items', itemOrdenRoutes);
 app.use('/reporte', reporteRoutes);
+app.use('/roles', rolRoutes);
 
 // 🌟 PASO 2: LA RED DE SEGURIDAD GLOBAL (Siempre debe ir al final de todo)
 app.use(errorMiddleware);
