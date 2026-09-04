@@ -5,8 +5,7 @@ const OrdenServicio = require('./ordenServicio');
 const ItemOrden = require('./itemOrden');
 const Exportacion = require('./exportacion');
 const Usuario = require('./usuario');
-const Rol = require('./rol');
-
+const Rol = require('./Rol');
 
 const models = {
   Cliente,
