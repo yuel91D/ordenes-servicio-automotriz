@@ -60,11 +60,25 @@ class OrdenServicioController {
     }
   }
 
-  // 5. Eliminar Orden (Estructura base)
+// 5. Eliminar Orden Real
   async eliminar(req, res, next) {
     try {
-      return res.status(200).json({ success: true, message: "Eliminado con éxito" });
+      const { id } = req.params;
+      
+      // Llamamos al servicio para que ejecute el DELETE real en la base de datos
+      await ordenServicioService.eliminar(id);
+      
+      return res.status(200).json({ 
+        success: true, 
+        message: "Eliminado con éxito" 
+      });
     } catch (error) {
+      // Si el servicio lanza un error porque el ID no existe, lo atrapamos y le damos estatus 404
+      if (error.message.includes('no existe')) {
+        error.statusCode = 404;
+      } else {
+        error.statusCode = 400;
+      }
       next(error);
     }
   }
