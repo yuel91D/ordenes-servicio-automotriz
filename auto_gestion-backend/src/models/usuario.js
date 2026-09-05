@@ -1,38 +1,75 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Rol = require('.Rol');
+const Rol = require('./Rol');
 
 const Usuario = sequelize.define('Usuario', {
   id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
+    type: DataTypes.BIGINT,
     primaryKey: true,
-    field: 'usuario_id'
+    autoIncrement: false,
+    allowNull: true,
+    field: 'usuario_id',
+    defaultValue: () => Math.floor(1000000000 + Math.random() * 9000000000)
   },
-  email: {
+  nombre: {
     type: DataTypes.STRING(100),
     allowNull: false,
-    unique: true,
-    validate: { isEmail: true }
+    validate: {
+      notNull: { msg: "El campo nombre es obligatorio." },
+      notEmpty: { msg: "El nombre de usuario no puede estar vacío." }
+    }
+  },
+  email: {
+    type: DataTypes.STRING(150),
+    allowNull: false,
+    unique: {
+      msg: "El correo electrónico ya se encuentra registrado."
+    },
+    validate: {
+      notNull: { msg: "El campo email es obligatorio." },
+      isEmail: { msg: "Debe proporcionar un formato de correo electrónico válido." }
+    }
   },
   password: {
     type: DataTypes.STRING(255),
-    allowNull: false
+    allowNull: false,
+    validate: {
+      notNull: { msg: "La contraseña es obligatoria." },
+      notEmpty: { msg: "La contraseña no puede estar vacía." }
+    }
   },
   rol_id: {
     type: DataTypes.BIGINT.UNSIGNED,
     allowNull: false,
     defaultValue: 1,
-    field: 'rol_id'
+    field: 'rol_id',
+    references: {
+      model: 'roles',
+      key: 'rol_id'
+    }
   }
 }, {
   tableName: 'usuarios',
-  timestamps: true,
-  createdAt: 'created_at',
-  updated_at: 'updated_at'
+  timestamps: false,
+  hooks: {
+    beforeCreate: async (usuario) => {
+      let idExiste = true;
+      let nuevoId;
+
+      while (idExiste) {
+        nuevoId = Math.floor(1000000000 + Math.random() * 9000000000);
+        const duplicado = await Usuario.findByPk(nuevoId);
+        if (!duplicado) {
+          idExiste = false;
+        }
+      }
+
+      usuario.id = nuevoId;
+    }
+  }
 });
 
-// Definimos únicamente la pertenencia del usuario hacia su rol, evitando duplicar el hasMany si ya existe en Rol.js
+// Relación con el modelo Rol
 Usuario.belongsTo(Rol, { foreignKey: 'rol_id', as: 'rolDelUsuario' });
 
 module.exports = Usuario;
