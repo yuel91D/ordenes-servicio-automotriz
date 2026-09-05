@@ -1,5 +1,6 @@
 // 🌟 IMPORTACIÓN DIRECTA: Sequelize mapea el modelo como 'Cliente' con mayúscula
 const { Cliente } = require('../models');
+const { ValidationError, UniqueConstraintError } = require('sequelize');
 
 /**
  * 🎯 Crear un nuevo cliente
@@ -31,6 +32,21 @@ const crearCliente = async (req, res) => {
 
   } catch (error) {
     console.error("❌ [Error Crear Cliente]:", error.message);
+
+    if (error instanceof UniqueConstraintError) {
+      return res.status(400).json({
+        success: false,
+        message: "El cliente ya existe (correo o datos duplicados)."
+      });
+    }
+    
+    if (error instanceof ValidationError) {
+      return res.status(400).json({
+        success: false,
+        message: error.errors.map(e => e.message)
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: "Error interno del servidor al crear el cliente."
@@ -121,6 +137,21 @@ const actualizarCliente = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ [Error Actualizar Cliente]:", error.message);
+
+    if (error instanceof UniqueConstraintError) {
+      return res.status(400).json({
+        success: false,
+        message: "Ya existe otro cliente con esos datos (correo duplicado)."
+      });
+    }
+
+    if (error instanceof ValidationError) {
+      return res.status(400).json({
+        success: false,
+        message: error.errors.map(e => e.message)
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: "Error interno del servidor al actualizar el cliente."
