@@ -5,13 +5,25 @@ const Vehiculo = sequelize.define('Vehiculo', {
   id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
-    autoIncrement: false, // Usamos tu lógica manual de generación
+    autoIncrement: false,
     field: 'vehiculos_id'
   },
   placa: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true // Asegura integridad en la DB
+    unique: true
+  },
+  marca: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  modelo: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  anio: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   tipoVehiculo: {
     type: DataTypes.STRING,
@@ -28,38 +40,14 @@ const Vehiculo = sequelize.define('Vehiculo', {
   propietario: {
     type: DataTypes.STRING
   },
-  clienteId: {
+  cliente_id: {
     type: DataTypes.BIGINT,
     allowNull: true,
-    field: 'cliente_id' // FK que enlaza con tu tabla clientes
+    field: 'cliente_id'
   }
 }, {
   tableName: 'vehiculos',
-  timestamps: false, // Manténlo así si no usas createdAt/updatedAt en esta tabla
-  hooks: {
-    beforeCreate: async (vehiculo, options) => {
-      let idExiste = true;
-      let nuevoId;
-
-      while (idExiste) {
-        // Genera el número aleatorio de 10 dígitos
-        nuevoId = Math.floor(1000000000 + Math.random() * 9000000000);
-
-        // Verificamos que no colisione en la tabla vehiculos
-        const duplicado = await Vehiculo.findByPk(nuevoId);
-        if (!duplicado) {
-          idExiste = false;
-        }
-      }
-      vehiculo.id = nuevoId;
-    }
-  }
+  timestamps: false
 });
-
-// Relaciones definidas para Sequelize
-Vehiculo.associate = (models) => {
-  Vehiculo.belongsTo(models.Cliente, { as: 'cliente', foreignKey: 'cliente_id' });
-  Vehiculo.hasMany(models.OrdenServicio, { as: 'ordenes', foreignKey: 'vehiculo_id' });
-};
 
 module.exports = Vehiculo;
