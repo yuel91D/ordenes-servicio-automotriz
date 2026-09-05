@@ -1,11 +1,11 @@
 const sequelize = require('../config/database');
 const Cliente = require('./cliente');
-const Vehiculo = require('./vehiculos');
-const OrdenServicio = require('./ordenServicio');
+const Vehiculo = require('./Vehiculos');
+const OrdenServicio = require('./OrdenServicio');
 const ItemOrden = require('./itemOrden');
 const Exportacion = require('./exportacion');
 const Usuario = require('./usuario');
-const Rol = require('./Rol');
+const Rol = require('./rol');
 
 const models = {
   Cliente,
