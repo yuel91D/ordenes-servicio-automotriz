@@ -11,12 +11,16 @@ const Usuario = sequelize.define('Usuario', {
     field: 'usuario_id',
     defaultValue: () => Math.floor(1000000000 + Math.random() * 9000000000)
   },
-  nombre: {
+  nombre_completo: {
     type: DataTypes.STRING(100),
     allowNull: false,
+    field: 'nombre_completo',
+    unique: {
+      msg: "El nombre completo ya se encuentra registrado."
+    },
     validate: {
-      notNull: { msg: "El campo nombre es obligatorio." },
-      notEmpty: { msg: "El nombre de usuario no puede estar vacío." }
+      notNull: { msg: "El campo nombre completo es obligatorio." },
+      notEmpty: { msg: "El nombre completo no puede estar vacío." }
     }
   },
   email: {
