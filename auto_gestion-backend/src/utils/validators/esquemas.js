@@ -10,15 +10,18 @@ const clienteUpdateEsquema = clienteEsquema.fork(['nombre', 'telefono', 'email']
 
 // 🚗 Molde para Vehículos
 const vehiculoEsquema = Joi.object({
-  placa: Joi.string().uppercase().min(6).max(10).required(),
+  vehiculos_id: Joi.number().required(),
+  placa: Joi.string().required(),
   tipoVehiculo: Joi.string().required(),
+  kilometraje: Joi.number().optional(),
+  estado: Joi.string().optional(),
+  propietario: Joi.string().optional(),
+  cliente_id: Joi.number().optional().allow(null, ''),
   marca: Joi.string().required(),
   modelo: Joi.string().required(),
-  anio: Joi.number().integer().min(1900).max(2100).required(),
-  kilometraje: Joi.number().integer().min(0).allow(null, ''),
-  estado: Joi.string().valid('activo', 'inactivo').default('activo'),
-  propietario: Joi.string().allow(null, ''),
-  cliente_id: Joi.number().integer().required()
+  anio: Joi.number().required(),
+  telefono: Joi.string().optional(),
+  email: Joi.string().email().optional()
 });
 const vehiculoUpdateEsquema = vehiculoEsquema.fork(['placa', 'tipoVehiculo', 'cliente_id'], (schema) => schema.optional());
 

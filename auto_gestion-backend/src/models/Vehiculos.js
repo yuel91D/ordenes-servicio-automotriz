@@ -8,6 +8,10 @@ const Vehiculo = sequelize.define('Vehiculo', {
     autoIncrement: false,
     field: 'vehiculos_id'
   },
+  propietario: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   placa: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -36,9 +40,6 @@ const Vehiculo = sequelize.define('Vehiculo', {
   estado: {
     type: DataTypes.STRING,
     allowNull: true
-  },
-  propietario: {
-    type: DataTypes.STRING
   },
   cliente_id: {
     type: DataTypes.BIGINT,
