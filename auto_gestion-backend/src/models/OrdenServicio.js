@@ -8,16 +8,37 @@ const OrdenServicio = sequelize.define('OrdenServicio', {
     autoIncrement: false,
     field: 'orden_servicio_id'
   },
-  fecha: {
-    type: DataTypes.DATEONLY,
-    allowNull: false
+  fecha_ingreso: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+    field: 'fecha_ingreso'
+  },
+  fecha_salida: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'fecha_salida'
   },
   tipo_orden: {
     type: DataTypes.STRING,
+    allowNull: false,
     field: 'tipo_orden'
+  },
+  estado: {
+    type: DataTypes.ENUM('Recibido', 'En proceso', 'Finalizado', 'Entregado', 'Cancelado'),
+    allowNull: false,
+    defaultValue: 'Recibido',
+    field: 'estado'
+  },
+  tipo_pago: {
+    type: DataTypes.ENUM('Efectivo', 'Tarjeta de Crédito', 'Tarjeta de Débito', 'Transferencia', 'Pendiente'),
+    allowNull: false,
+    defaultValue: 'Pendiente',
+    field: 'tipo_pago'
   },
   vehiculo_id: {
     type: DataTypes.BIGINT,
+    allowNull: false,
     field: 'vehiculo_id'
   }
 }, {
@@ -30,8 +51,12 @@ const OrdenServicio = sequelize.define('OrdenServicio', {
 
       while (idExiste) {
         nuevoId = Math.floor(1000000000 + Math.random() * 9000000000);
-        const duplicado = await OrdenServicio.findByPk(nuevoId);
-        if (!duplicado) {
+        const [resultado] = await sequelize.query(
+          `SELECT orden_servicio_id FROM ordenes_servicio WHERE orden_servicio_id = ${nuevoId} LIMIT 1`,
+          { transaction: options.transaction }
+        );
+        
+        if (resultado.length === 0) {
           idExiste = false;
         }
       }
@@ -42,6 +67,9 @@ const OrdenServicio = sequelize.define('OrdenServicio', {
 });
 
 OrdenServicio.associate = (models) => {
+  if (models && models.Vehiculo) {
+    OrdenServicio.belongsTo(models.Vehiculo, { as: 'vehiculo', foreignKey: 'vehiculo_id' });
+  }
   if (models && models.ItemOrden) {
     OrdenServicio.hasMany(models.ItemOrden, { as: 'items', foreignKey: 'orden_servicio_id' });
   }

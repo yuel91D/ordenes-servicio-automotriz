@@ -1,110 +1,213 @@
-const ordenServicioService = require('../services/ordenServicioService');
+const { OrdenServicio, ItemOrden, Vehiculo, Cliente, sequelize } = require('../models');
 
-class OrdenServicioController {
-  // 1. Crear una nueva orden 
-  async crear(req, res, next) {
-    try {
-      const nuevaOrden = await ordenServicioService.crear(req.body);
-      return res.status(201).json({
-        success: true,
-        data: nuevaOrden
-      });
-    } catch (error) {
-      next(error); // 🚀 Al middleware global
-    }
-  }
+// 1. CREAR ORDEN EN CASCADA CON TRANSACCIÓN Y AUTOCREACIÓN
+const crearOrdenServicio = async (req, res) => {
+  const t = await sequelize.transaction();
 
-  // 2. Listar todas las órdenes
-  async listar(req, res, next) {
-    try {
-      const ordenes = await ordenServicioService.obtenerTodas();
-      return res.status(200).json({ success: true, data: ordenes });
-    } catch (error) {
-      next(error);
-    }
-  }
+  try {
+    const { 
+      tipo_orden, tipo_pago, vehiculo_id, placa, marca, modelo, 
+      anio, tipoVehiculo, kilometraje, estadoVehiculo, propietario, 
+      telefono, email, items 
+    } = req.body;
 
-  // 3. Buscar orden específica por ID
-  async buscarPorId(req, res, next) {
-    try {
-      const { id } = req.params;
-      const orden = await ordenServicioService.obtenerPorId(id);
-      return res.status(200).json({ success: true, data: orden });
-    } catch (error) {
-      // Si el mensaje dice que no existe, le inyectamos un 404 antes de pasarlo al middleware
-      if (error.message.includes('no existe')) {
-        error.statusCode = 404;
-      } else {
-        error.statusCode = 400;
-      }
-      next(error);
-    }
-  }
+    let vehiculoFinalId = vehiculo_id;
 
-  // 4. Actualizar Orden (Estructura base)
-  async actualizar(req, res, next) {
-    try {
-      const { id } = req.params;
-      const datos = req.body;
-      
-      // Llamamos al servicio para que ejecute el UPDATE real
-      const ordenActualizada = await ordenServicioService.actualizar(id, datos);
-      
-      return res.status(200).json({ 
-        success: true, 
-        message: "Actualizado con éxito",
-        data: ordenActualizada 
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+    // Resolver Vehículo y Cliente si no existe el ID
+    if (!vehiculoFinalId && placa) {
+      let vehiculo = await Vehiculo.findOne({ where: { placa }, transaction: t });
 
-// 5. Eliminar Orden Real
-  async eliminar(req, res, next) {
-    try {
-      const { id } = req.params;
-      
-      // Llamamos al servicio para que ejecute el DELETE real en la base de datos
-      await ordenServicioService.eliminar(id);
-      
-      return res.status(200).json({ 
-        success: true, 
-        message: "Eliminado con éxito" 
-      });
-    } catch (error) {
-      // Si el servicio lanza un error porque el ID no existe, lo atrapamos y le damos estatus 404
-      if (error.message.includes('no existe')) {
-        error.statusCode = 404;
-      } else {
-        error.statusCode = 400;
-      }
-      next(error);
-    }
-  }
+      if (!vehiculo) {
+        let cliente = null;
+        if (email) {
+          cliente = await Cliente.findOne({ where: { email }, transaction: t });
+        }
 
-  // 6. Reporte por Fechas 🛡️
-  async obtenerReportePorFechas(req, res, next) {
-    try {
-      const { fecha_inicio, fecha_fin } = req.query;
+        if (!cliente) {
+          cliente = await Cliente.create({
+            nombre: propietario || 'Cliente sin nombre',
+            telefono: telefono || 'No registrado',
+            email: email || 'no_registrado@taller.com'
+          }, { transaction: t });
+        }
 
-      // Validación rápida de parámetros de consulta
-      if (!fecha_inicio || !fecha_fin) {
-        const errorParams = new Error("Faltan parámetros requeridos: 'fecha_inicio' y 'fecha_fin' son obligatorios (Formato: YYYY-MM-DD).");
-        errorParams.statusCode = 400;
-        return next(errorParams);
+        vehiculo = await Vehiculo.create({
+          placa,
+          marca: marca || 'Genérica',
+          modelo: modelo || 'Genérico',
+          anio: anio || new Date().getFullYear(),
+          tipoVehiculo: tipoVehiculo || 'Automóvil',
+          kilometraje: kilometraje || 0,
+          estado: estadoVehiculo || 'activo',
+          propietario: cliente.nombre,
+          cliente_id: cliente.id
+        }, { transaction: t });
       }
 
-      const reporte = await ordenServicioService.generarReporteFechas(fecha_inicio, fecha_fin);
-
-      return res.status(200).json({
-        success: true,
-        data: reporte
-      });
-    } catch (error) {
-      next(error); // Atrapa el statusCode 400 de fechas al revés inyectado en el servicio
+      vehiculoFinalId = vehiculo.id;
     }
-  }
-}
 
-module.exports = new OrdenServicioController();
+    if (!vehiculoFinalId) {
+      await t.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Debe proporcionar un 'vehiculo_id' válido o los datos de la 'placa'."
+      });
+    }
+
+    // Crear la Orden
+    const nuevaOrden = await OrdenServicio.create({
+      tipo_orden,
+      tipo_pago: tipo_pago || 'Pendiente',
+      estado: 'Recibido',
+      fecha_ingreso: new Date(),
+      vehiculo_id: vehiculoFinalId
+    }, { transaction: t });
+
+    // Inserción en cascada de los Ítems
+    if (items && Array.isArray(items) && items.length > 0) {
+      const itemsFormateados = items.map(item => ({
+        ...item,
+        orden_servicio_id: nuevaOrden.id
+      }));
+      await ItemOrden.bulkCreate(itemsFormateados, { transaction: t });
+    }
+
+    // Actualizar vehículo a 'en taller'
+    await Vehiculo.update(
+      { estado: 'en taller' }, 
+      { where: { id: vehiculoFinalId }, transaction: t }
+    );
+
+    await t.commit();
+
+    const ordenCompleta = await OrdenServicio.findByPk(nuevaOrden.id, {
+      include: [
+        { model: Vehiculo, as: 'vehiculo', include: [{ model: Cliente, as: 'cliente' }] },
+        { model: ItemOrden, as: 'items' }
+      ]
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Orden e ítems creados con éxito, y vehículo ingresado al taller.",
+      data: ordenCompleta
+    });
+
+  } catch (error) {
+    await t.rollback();
+    console.error("❌ Error al crear orden:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 2. LISTAR TODAS LAS ÓRDENES CON RELACIONES
+const listarOrdenesServicio = async (req, res) => {
+  try {
+    const ordenes = await OrdenServicio.findAll({
+      include: [
+        { model: Vehiculo, as: 'vehiculo', include: [{ model: Cliente, as: 'cliente' }] },
+        { model: ItemOrden, as: 'items' }
+      ]
+    });
+    return res.status(200).json({ success: true, data: ordenes });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 3. OBTENER ÓRDEN POR ID
+const obtenerOrdenServicio = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const orden = await OrdenServicio.findByPk(id, {
+      include: [
+        { model: Vehiculo, as: 'vehiculo', include: [{ model: Cliente, as: 'cliente' }] },
+        { model: ItemOrden, as: 'items' }
+      ]
+    });
+
+    if (!orden) return res.status(404).json({ success: false, message: "Orden de servicio no encontrada." });
+    return res.status(200).json({ success: true, data: orden });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 4. ACTUALIZAR ÓRDEN CON VALIDACIÓN DE PAGO Y CAMBIO DE ESTADO
+const actualizarOrdenServicio = async (req, res) => {
+  const t = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+    const { tipo_orden, estado, tipo_pago, vehiculo_id } = req.body;
+
+    const ordenActual = await OrdenServicio.findByPk(id, { transaction: t });
+    if (!ordenActual) {
+      await t.rollback();
+      return res.status(404).json({ success: false, message: "Orden no encontrada." });
+    }
+
+    const nuevoEstado = estado || ordenActual.estado;
+    const nuevoTipoPago = tipo_pago || ordenActual.tipo_pago;
+
+    // Validación de entrega sin pago
+    if (nuevoEstado === 'Entregado' && nuevoTipoPago === 'Pendiente') {
+      await t.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "No se puede entregar la orden de servicio si el tipo de pago se encuentra 'Pendiente'."
+      });
+    }
+
+    const datosActualizar = {
+      ...(tipo_orden && { tipo_orden }),
+      ...(estado && { estado }),
+      ...(tipo_pago && { tipo_pago }),
+      ...(vehiculo_id && { vehiculo_id })
+    };
+
+    if ((estado === 'Entregado' || estado === 'Cancelado') && !ordenActual.fecha_salida) {
+      datosActualizar.fecha_salida = new Date();
+    }
+
+    await OrdenServicio.update(datosActualizar, { where: { id }, transaction: t });
+
+    // Sincronizar estado del vehículo
+    if (estado) {
+      if (estado === 'Entregado' || estado === 'Cancelado') {
+        await Vehiculo.update({ estado: 'activo' }, { where: { id: ordenActual.vehiculo_id }, transaction: t });
+      } else if (['Recibido', 'En proceso', 'Finalizado'].includes(estado)) {
+        await Vehiculo.update({ estado: 'en taller' }, { where: { id: ordenActual.vehiculo_id }, transaction: t });
+      }
+    }
+
+    await t.commit();
+
+    const ordenEditada = await OrdenServicio.findByPk(id, {
+      include: [{ model: Vehiculo, as: 'vehiculo' }, { model: ItemOrden, as: 'items' }]
+    });
+
+    return res.status(200).json({ success: true, message: "Orden actualizada correctamente.", data: ordenEditada });
+
+  } catch (error) {
+    await t.rollback();
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 5. BLOQUEAR ELIMINACIÓN DE ÓRDENES
+const bloquearEliminacion = async (req, res) => {
+  return res.status(403).json({
+    success: false,
+    message: "Acción prohibida: Las órdenes de servicio no se pueden eliminar por normativas de auditoría. Utilice el cambio de estado a 'Cancelado'."
+  });
+};
+
+module.exports = {
+  crear: crearOrdenServicio,
+  listar: listarOrdenesServicio,
+  obtener: obtenerOrdenServicio,
+  actualizar: actualizarOrdenServicio,
+  bloquearEliminacion
+};

@@ -9,8 +9,9 @@ const ItemOrden = sequelize.define('ItemOrden', {
     field: 'item_orden_id' // 🌟 Sincronizado: item_orden_id
   },
   orden_servicio_id: {
-    type: DataTypes.INTEGER,
-    field: 'orden_servicio_id' // 🌟 Sincronizado: orden_servicio_id
+    type: DataTypes.BIGINT, // 🌟 Sin .UNSIGNED para que coincida con OrdenServicio
+    field: 'orden_servicio_id',
+    allowNull: false
   },
   descripcion: {
     type: DataTypes.STRING,
@@ -22,7 +23,14 @@ const ItemOrden = sequelize.define('ItemOrden', {
   },
   valorUnitario: {
     type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
     field: 'valor_unitario'
+  },
+  // 🌟 MEJORA: Columna calculada automáticamente por MySQL (STORED)
+  valorTotal: {
+    type: DataTypes.DECIMAL(10, 2),
+    field: 'valor_total',
+    readOnly: true // Solo lectura: MySQL calcula (cantidad * valor_unitario) en el Insert/Update
   }
 }, {
   tableName: 'items_orden',
@@ -30,7 +38,9 @@ const ItemOrden = sequelize.define('ItemOrden', {
 });
 
 ItemOrden.associate = (models) => {
-  ItemOrden.belongsTo(models.OrdenServicio, { as: 'ordenServicio', foreignKey: 'orden_servicio_id' });
+  if (models && models.OrdenServicio) {
+    ItemOrden.belongsTo(models.OrdenServicio, { as: 'ordenServicio', foreignKey: 'orden_servicio_id' });
+  }
 };
 
 module.exports = ItemOrden;
