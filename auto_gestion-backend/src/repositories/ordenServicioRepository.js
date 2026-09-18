@@ -1,5 +1,4 @@
-// src/repositories/ordenServicioRepository.js
-const { OrdenServicio, ItemOrden, vehiculo: Vehiculo } = require('../models');
+const { OrdenServicio, ItemOrden, Vehiculo } = require('../models');
 const { Op } = require('sequelize');
 
 class OrdenServicioRepository {

@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
+const usuarioRoutes = require('./routes/usuarioRoutes');
 
 // 2. Definición de rutas
 const clienteRoutes = require('./routes/clienteRoutes');
@@ -19,6 +20,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use('/usuarios', usuarioRoutes);
 
 // ─── CONFIGURACIÓN DE SWAGGER COMPLETA (JSON PURO) ───
 const swaggerOptions = {

@@ -1,8 +1,8 @@
-// src/services/ordenServicioService.js
 const { Op } = require('sequelize');
 const ordenServicioRepository = require('../repositories/ordenServicioRepository'); 
 const itemOrdenRepository = require('../repositories/itemOrdenRepository');
-const { Vehiculo } = require('../models'); 
+// ✅ Importa el modelo directamente desde su archivo
+const Vehiculo = require('../models/Vehiculo'); 
 
 class OrdenServicioService {
   constructor() {
@@ -30,7 +30,7 @@ class OrdenServicioService {
       throw new Error(`No se puede registrar la orden: El vehículo se encuentra INACTIVO.`);
     }
 
-    // 4. CREACIÓN - ¡Nombres exactos alineados con el Modelo!
+    // 4. CREACIÓN
     return await this.ordenServicioRepository.crear({
       fecha: fecha,
       tipo_orden: tipo_orden,
@@ -38,7 +38,6 @@ class OrdenServicioService {
     });
   }
 
-  // ... (tus otros métodos existentes permanecen igual) ...
   async obtenerTodas() { return await this.ordenServicioRepository.obtenerTodas(); }
   
   async obtenerPorId(id) {

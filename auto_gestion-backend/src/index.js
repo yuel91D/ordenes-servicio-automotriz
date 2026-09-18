@@ -3,7 +3,7 @@ require('dotenv').config(); // ¡Esto es indispensable!
 const app = require('./app');
 const sequelize = require('./config/database');
 const Usuario = require('./models/usuario');
-const Rol = require('./models/Rol'); // <-- 1. Importamos el modelo Rol
+const Rol = require('./models/rol'); // <-- 1. Importamos el modelo Rol
 
 const PORT = process.env.PORT || 3000;
 
