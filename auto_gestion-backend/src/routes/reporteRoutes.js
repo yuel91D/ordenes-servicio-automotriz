@@ -1,18 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const reporteController = require('../controllers/reporteController');
-const authMiddleware = require('../middlewares/authMiddleware'); // 🔒 Importamos el middleware
 
-// Aplicamos el authMiddleware a TODAS las rutas de este archivo
-router.use(authMiddleware);
+// 1. Listar historial de exportaciones (GET http://localhost:3000/reporte)
+router.get('/', (req, res) => reporteController.listarHistorial(req, res));
 
-// Generar reporte de fechas
-router.get('/fechas', reporteController.obtenerReportePorFechas);
+// 2. Generar reporte por rango de fechas (GET http://localhost:3000/reporte/fechas)
+router.get('/fechas', (req, res) => reporteController.obtenerReportePorFechas(req, res));
 
-// Listar historial de exportaciones
-router.get('/', reporteController.listarHistorial);
+// 3. Blindaje Anti-Edición (PUT http://localhost:3000/reporte/:id)
+router.put('/:id', (req, res) => reporteController.actualizarExportacion(req, res));
 
-// Eliminar un registro de exportación
-router.delete('/:id', reporteController.eliminarRegistro);
+// 4. Blindaje Anti-Eliminación (DELETE http://localhost:3000/reporte/:id)
+router.delete('/:id', (req, res) => reporteController.eliminarExportacion(req, res));
 
 module.exports = router;

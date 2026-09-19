@@ -8,7 +8,7 @@ const Rol = require('./models/rol'); // <-- 1. Importamos el modelo Rol
 const PORT = process.env.PORT || 3000;
 
 // Sincroniza el modelo con la BD
-sequelize.sync({ alter: true }) // 'alter: true' actualiza la tabla si ya existe
+sequelize.sync() // ✅ Mantiene las tablas existentes sin alterar su estructura
   .then(async () => {
     console.log('✅ Tablas sincronizadas con éxito.');
 

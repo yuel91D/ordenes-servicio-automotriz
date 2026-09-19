@@ -1,13 +1,13 @@
 // 1. 🎯 Importaciones esenciales externas e internas
 const { Op } = require('sequelize'); 
 
-// Importación directa y segura para evitar el "undefined"
-const ItemOrden = require('../models/itemOrden'); 
+// Importación directa del modelo de Ítem existente
+const ItemOrden = require('../models/ItemOrden'); 
 
 class ItemOrdenService {
 
   async agregarItem(datos) {
-    // Capturamos los datos tal como te llegan desde Postman/Swagger
+    // Capturamos los datos enviados
     const { orden_servicio_id, descripcion, cantidad, precio_unitario } = datos;
 
     if (!ItemOrden) {
@@ -19,7 +19,6 @@ class ItemOrdenService {
     // 2. 🛡️ REGLA DE NEGOCIO: Validar si el ítem ya existe en ESTA orden
     const itemDuplicado = await ItemOrden.findOne({
       where: {
-        // 🌟 Ajustado a camelCase para la consulta interna de Sequelize
         ordenServicioId: orden_servicio_id, 
         descripcion: descripcionLimpia
       }
@@ -31,17 +30,18 @@ class ItemOrdenService {
 
     // 3. 🎯 MAPEO SEGURO: Coincidencia exacta con las columnas de tu BD (camelCase)
     const datosParaGuardar = {
-      ordenServicioId: orden_servicio_id,  // 🌟 Corregido a camelCase
+      ordenServicioId: orden_servicio_id,
       descripcion: descripcionLimpia,
       cantidad: cantidad,
-      valorUnitario: precio_unitario       // 🌟 Corregido a camelCase
+      valorUnitario: precio_unitario
+      // Nota: valorTotal se calcula automáticamente en la BD / hook beforeSave
     };
 
     // 4. Guardamos en MySQL
     return await ItemOrden.create(datosParaGuardar);
   }
 
-  // Mantenemos los cascarones de los otros métodos para no romper el controlador
+  // Métodos auxiliares
   async listarItems() { return []; }
   async obtenerItem(id) { return null; }
   async actualizarItem(id, datos) { return null; }

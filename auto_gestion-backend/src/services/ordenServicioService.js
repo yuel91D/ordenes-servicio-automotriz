@@ -1,7 +1,8 @@
 const { Op } = require('sequelize');
+const sequelize = require('../config/database'); // Ajusta la ruta a tu conexión Sequelize
 const ordenServicioRepository = require('../repositories/ordenServicioRepository'); 
 const itemOrdenRepository = require('../repositories/itemOrdenRepository');
-// ✅ Importa el modelo directamente desde su archivo
+const itemOrdenService = require('./itemOrdenService');
 const Vehiculo = require('../models/Vehiculo'); 
 
 class OrdenServicioService {
@@ -11,8 +12,8 @@ class OrdenServicioService {
   }
 
   async crear(datosOrden) {
-    // 1. Destructuramos lo que viene de Postman
-    const { fecha, tipo_orden, vehiculo_id } = datosOrden; 
+    // 1. Destructuramos lo que viene desde la petición HTTP (incluyendo items si los envían)
+    const { fecha, tipo_orden, vehiculo_id, items } = datosOrden; 
 
     // 2. Validación de presencia
     if (!vehiculo_id) {
@@ -30,12 +31,44 @@ class OrdenServicioService {
       throw new Error(`No se puede registrar la orden: El vehículo se encuentra INACTIVO.`);
     }
 
-    // 4. CREACIÓN
-    return await this.ordenServicioRepository.crear({
-      fecha: fecha,
-      tipo_orden: tipo_orden,
-      vehiculo_id: vehiculo_id
-    });
+    // 4. CREACIÓN CON TRANSACCIÓN (Garantiza inmutabilidad y consistencia)
+    const transaction = await sequelize.transaction();
+
+    try {
+      // Registrar la cabecera de la orden
+      const nuevaOrden = await this.ordenServicioRepository.crear({
+        fecha: fecha,
+        tipo_orden: tipo_orden,
+        vehiculo_id: vehiculo_id
+      }, { transaction });
+
+      const ordenId = nuevaOrden.orden_servicio_id || nuevaOrden.id;
+
+      // Si vienen ítems en el payload, los creamos pasando por la validación de precio oficial
+      const itemsGuardados = [];
+      if (Array.isArray(items) && items.length > 0) {
+        for (const item of items) {
+          const itemCreado = await itemOrdenService.agregarItem({
+            orden_servicio_id: ordenId,
+            servicio_producto_id: item.servicio_producto_id,
+            descripcion: item.descripcion,
+            cantidad: item.cantidad,
+            precio_unitario: item.precio_unitario
+          }, { transaction });
+
+          itemsGuardados.push(itemCreado);
+        }
+      }
+
+      await transaction.commit();
+
+      const ordenData = typeof nuevaOrden.toJSON === 'function' ? nuevaOrden.toJSON() : nuevaOrden;
+      return { ...ordenData, items: itemsGuardados };
+
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   }
 
   async obtenerTodas() { return await this.ordenServicioRepository.obtenerTodas(); }

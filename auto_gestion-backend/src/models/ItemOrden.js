@@ -29,12 +29,18 @@ const ItemOrden = sequelize.define('ItemOrden', {
   // 🌟 MEJORA: Columna calculada automáticamente por MySQL (STORED)
   valorTotal: {
     type: DataTypes.DECIMAL(10, 2),
-    field: 'valor_total',
-    readOnly: true // Solo lectura: MySQL calcula (cantidad * valor_unitario) en el Insert/Update
+    field: 'valor_total'
   }
 }, {
   tableName: 'items_orden',
-  timestamps: false
+  timestamps: false,
+  hooks: {
+    beforeSave: (item) => {
+      if (item.cantidad && item.valorUnitario) {
+        item.valorTotal = Number(item.cantidad) * Number(item.valorUnitario);
+      }
+    }
+  }
 });
 
 ItemOrden.associate = (models) => {

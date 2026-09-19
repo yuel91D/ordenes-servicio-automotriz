@@ -51,27 +51,25 @@ async listarHistorial(req, res) {
     }
   }
 
-  // 3. Eliminar registro del historial
-  async eliminarRegistro(req, res) {
-    try {
-      const { id } = req.params;
-      
-      // Validación simple de formato (debe ser el ID que generamos de 10 caracteres)
-      if (!id || id.length !== 10) {
-        return res.status(400).json({ success: false, message: "ID con formato inválido." });
-      }
+  //3. PUT /reporte/exportaciones/:id
+async actualizarExportacion(req, res) {
+  const { id } = req.params;
+  return res.status(403).json({
+    success: false,
+    codigo: "AUDIT_IMMUTABLE_UPDATE",
+    message: `Acceso denegado: El registro de exportación '${id}' no se puede editar. Por políticas anti-fraude, la auditoría de reportes es inmutable.`
+  });
+}
 
-      const eliminado = await Exportacion.destroy({ where: { id } });
-
-      if (!eliminado) {
-        return res.status(404).json({ success: false, message: "Registro no encontrado." });
-      }
-
-      return res.status(200).json({ success: true, message: "Registro eliminado correctamente." });
-    } catch (error) {
-      return res.status(500).json({ success: false, message: "Error al procesar la eliminación." });
-    }
-  }
+  //4. DELETE /reporte/exportaciones/:id
+async eliminarExportacion(req, res) {
+  const { id } = req.params;
+  return res.status(403).json({
+    success: false,
+    codigo: "AUDIT_IMMUTABLE_DELETE",
+    message: `Acceso denegado: El registro de exportación '${id}' no se puede eliminar. El historial debe permanecer intacto para trazabilidad legal y financiera.`
+  });
+}
 }
 
 module.exports = new ReporteController();

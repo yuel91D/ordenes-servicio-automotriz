@@ -1,5 +1,4 @@
 const { Op } = require('sequelize');
-// Importamos todo desde el index de modelos
 const { OrdenServicio, Vehiculo, Cliente, ItemOrden } = require('../models');
 
 class ReporteRepository {
@@ -7,11 +6,10 @@ class ReporteRepository {
     try {
       return await OrdenServicio.findAll({
         where: {
-          fecha: {
+          fecha_ingreso: { 
             [Op.between]: [fechaInicio, fechaFin]
           }
         },
-        order: [['fecha', 'ASC']],
         include: [
           {
             model: Vehiculo,
