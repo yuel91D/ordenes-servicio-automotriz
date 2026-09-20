@@ -51,7 +51,12 @@ const Usuario = sequelize.define('Usuario', {
       model: 'roles',
       key: 'rol_id'
     }
-  }
+  },
+  estado: {
+  type: DataTypes.CHAR(1),
+  allowNull: false,
+  defaultValue: 'S'
+}
 }, {
   tableName: 'usuarios',
   timestamps: false,

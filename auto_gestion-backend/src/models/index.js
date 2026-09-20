@@ -6,6 +6,7 @@ const ItemOrden = require('./ItemOrden');
 const Exportacion = require('./exportacion');
 const Usuario = require('./usuario');
 const Rol = require('./rol');
+const Empleado = require('./empleado');
 
 const models = {
   Cliente,
@@ -14,7 +15,8 @@ const models = {
   ItemOrden,
   Exportacion,
   Usuario,
-  Rol
+  Rol,
+  Empleado
 };
 
 // 🔄 Ejecuta las asociaciones de forma automática

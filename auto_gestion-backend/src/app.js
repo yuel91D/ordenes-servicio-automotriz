@@ -3,7 +3,6 @@ const express = require('express');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
-const usuarioRoutes = require('./routes/usuarioRoutes');
 
 // 2. Definición de rutas
 const clienteRoutes = require('./routes/clienteRoutes');
@@ -13,6 +12,8 @@ const itemOrdenRoutes = require('./routes/itemOrdenRoutes');
 const reporteRoutes = require('./routes/reporteRoutes');
 const authRoutes = require('./routes/authRoutes');
 const rolRoutes = require('./routes/rolRoutes');
+const usuarioRoutes = require('./routes/usuarioRoutes');
+const empleadoRoutes = require('./routes/empleadoRoutes');
 
 const errorMiddleware = require('./middlewares/errorMiddleware');
 
@@ -184,6 +185,7 @@ app.use('/ordenes', ordenServicioRoutes);
 app.use('/items', itemOrdenRoutes);
 app.use('/reporte', reporteRoutes);
 app.use('/roles', rolRoutes);
+app.use('/empleados', empleadoRoutes);
 
 // 🌟 PASO 2: LA RED DE SEGURIDAD GLOBAL (Siempre debe ir al final de todo)
 app.use(errorMiddleware);

@@ -1,28 +1,18 @@
-const express = require('express');
-const router = express.Router();
-const authMiddleware = require('../middlewares/authMiddleware');
-const usuarioController = require('../controllers/usuarioController');
+const usuarioService = require('../services/usuarioService');
 
-router.use(authMiddleware);
-
-router.get('/', usuarioController.listarUsuarios);
-router.post('/', usuarioController.crearUsuario);
-router.put('/:id', usuarioController.actualizarUsuario);
-router.delete('/:id', usuarioController.eliminarUsuario);
-
-// GET: Listar todos los usuarios
-router.get('/', async (req, res, next) => {
+const listarUsuarios = async (req, res, next) => {
   try {
     const usuarios = await usuarioService.listarUsuarios();
-    res.status(200).json({ success: true, total: usuarios.length, usuarios });
-  } catch (error) { next(error); }
-});
+    return res.status(200).json({ success: true, total: usuarios.length, usuarios });
+  } catch (error) {
+    next(error);
+  }
+};
 
-// POST: Crear un nuevo usuario
-router.post('/', async (req, res, next) => {
+const crearUsuario = async (req, res, next) => {
   try {
     const nuevoUsuario = await usuarioService.crearUsuario(req.body);
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'Usuario creado exitosamente',
       usuario: {
@@ -41,16 +31,15 @@ router.post('/', async (req, res, next) => {
     }
     next(error);
   }
-});
+};
 
-// PUT: Actualizar un usuario por ID
-router.put('/:id', async (req, res, next) => {
+const actualizarUsuario = async (req, res, next) => {
   try {
     const usuarioActualizado = await usuarioService.actualizarUsuario(req.params.id, req.body);
     if (!usuarioActualizado) {
       return res.status(404).json({ success: false, message: 'Usuario no existe.' });
     }
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Usuario actualizado exitosamente',
       usuario: {
@@ -69,17 +58,23 @@ router.put('/:id', async (req, res, next) => {
     }
     next(error);
   }
-});
+};
 
-// DELETE: Eliminar un usuario por ID
-router.delete('/:id', async (req, res, next) => {
+const eliminarUsuario = async (req, res, next) => {
   try {
     const eliminado = await usuarioService.eliminarUsuario(req.params.id);
     if (!eliminado) {
       return res.status(404).json({ success: false, message: 'Usuario no existe.' });
     }
-    res.status(200).json({ success: true, message: 'Usuario eliminado exitosamente' });
-  } catch (error) { next(error); }
-});
+    return res.status(200).json({ success: true, message: 'Usuario eliminado exitosamente' });
+  } catch (error) {
+    next(error);
+  }
+};
 
-module.exports = router;
+module.exports = {
+  listarUsuarios,
+  crearUsuario,
+  actualizarUsuario,
+  eliminarUsuario
+};
