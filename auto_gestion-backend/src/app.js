@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocs = require('./config/swagger'); // Importamos la spec modularizada
+const agentRoutes = require('./routes/agent.routes.js');
 
 // 2. Definición de rutas
 const clienteRoutes = require('./routes/clienteRoutes');
@@ -36,7 +37,10 @@ app.use('/items', itemOrdenRoutes);
 app.use('/reporte', reporteRoutes);
 app.use('/roles', rolRoutes);
 
-// RED DE SEGURIDAD GLOBAL
+// Gemini IA (debe registrarse antes del middleware global de errores)
+app.use(agentRoutes);
+
+// RED DE SEGURIDAD GLOBAL (al final de todas las rutas)
 app.use(errorMiddleware);
 
 module.exports = app;

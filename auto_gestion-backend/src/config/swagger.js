@@ -30,6 +30,71 @@ const swaggerOptions = {
       },
     ],
     paths: {
+      // 🤖 AGENTE IA
+      '/agente/atender': {
+        post: {
+          summary: 'Atender consulta con el Agente de IA',
+          tags: ['Agente IA'],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['prompt'],
+                  properties: {
+                    prompt: {
+                      type: 'string',
+                      example: 'Hola, necesito crear una orden de servicio para el cliente Nick Fury pero no sé sus datos ni el vehículo.',
+                    },
+                    historial: {
+                      type: 'array',
+                      items: { type: 'object' },
+                      example: [],
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: 'Respuesta generada por el agente de IA',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      data: {
+                        type: 'object',
+                        properties: {
+                          respuesta: { type: 'string', example: '¡Hola! He localizado al cliente en el sistema...' },
+                          accionesRealizadas: {
+                            type: 'array',
+                            items: { type: 'object' },
+                            example: [
+                              {
+                                herramienta: 'buscarCliente',
+                                parametros: { criterio: 'Nick Fury' },
+                                resultado: { encontrado: true, cliente: { id: 1, nombre: 'Nick Fury' } },
+                              },
+                            ],
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            500: {
+              description: 'Error al procesar la solicitud con el Agente de IA',
+            },
+          },
+        },
+      },
+
       // 🔑 TOKENS
       '/tokens/validar': {
         post: {
