@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
 const Cliente = sequelize.define('Cliente', {
-id: {
+  id: {
     type: DataTypes.BIGINT,
     primaryKey: true,
     autoIncrement: false,
@@ -14,8 +14,19 @@ id: {
     allowNull: false
   },
   telefono: {
-    type: DataTypes.STRING,
-    allowNull: true
+    type: DataTypes.STRING(20),
+    allowNull: true,
+    validate: {
+      // Permite que el usuario escriba guiones, espacios, paréntesis y el '+' al inicio
+      is: {
+        args: /^\+?[0-9\s\-\(\)]+$/,
+        msg: "El formato del teléfono no es válido. Solo puede contener números, espacios, guiones y paréntesis."
+      },
+      len: {
+        args: [7, 20],
+        msg: "Formato no valido."
+      }
+    }
   },
   email: {
     type: DataTypes.STRING,
@@ -25,6 +36,15 @@ id: {
   tableName: 'clientes',
   timestamps: false,
   hooks: {
+    // 1. Limpia y normaliza el teléfono antes de validarlo y guardarlo
+    beforeValidate: (cliente) => {
+      if (cliente.telefono) {
+        const hasPlus = cliente.telefono.startsWith('+');
+        const digitsOnly = cliente.telefono.replace(/\D/g, '');
+        cliente.telefono = hasPlus ? `+${digitsOnly}` : digitsOnly;
+      }
+    },
+    // 2. Genera y verifica la unicidad del ID antes de crearlo
     beforeCreate: async (cliente, options) => {
       let idExiste = true;
       let nuevoId;

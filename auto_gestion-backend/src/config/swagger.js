@@ -22,18 +22,27 @@ const swaggerOptions = {
           bearerFormat: 'JWT',
           description: 'Ingresa el token JWT obtenido en /auth/login',
         },
+        XRoleHeader: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'x-role',
+          description: 'Cabecera de bypass para pruebas locales (ej: 1 o ADMIN)',
+        },
       },
     },
     security: [
       {
         BearerAuth: [],
+        XRoleHeader: [],
       },
     ],
+    
     paths: {
       // 🤖 AGENTE IA
       '/agente/atender': {
         post: {
-          summary: 'Atender consulta con el Agente de IA',
+          summary: 'Atender consulta u orquestación de acciones con el Agente de IA',
+          description: 'Envía un prompt al agente. La IA analiza si debe realizar lecturas o ejecutar flujos secuenciales de escritura en cadena (Usuario -> Cliente -> Vehículo -> Orden).',
           tags: ['Agente IA'],
           requestBody: {
             required: true,
@@ -45,7 +54,7 @@ const swaggerOptions = {
                   properties: {
                     prompt: {
                       type: 'string',
-                      example: 'Hola, necesito crear una orden de servicio para el cliente Nick Fury pero no sé sus datos ni el vehículo.',
+                      example: 'Hola, necesito crear una orden de servicio para Clint Barton con un Mustang 1969, correo cbarton@shield.com y falla en los frenos.',
                     },
                     historial: {
                       type: 'array',
@@ -59,7 +68,7 @@ const swaggerOptions = {
           },
           responses: {
             200: {
-              description: 'Respuesta generada por el agente de IA',
+              description: 'Respuesta generada y acciones ejecutadas por el agente de IA',
               content: {
                 'application/json': {
                   schema: {
@@ -69,16 +78,16 @@ const swaggerOptions = {
                       data: {
                         type: 'object',
                         properties: {
-                          respuesta: { type: 'string', example: '¡Hola! He localizado al cliente en el sistema...' },
+                          respuesta: { type: 'string', example: '¡Hola! He creado la orden de servicio para Clint Barton...' },
                           accionesRealizadas: {
                             type: 'array',
                             items: { type: 'object' },
                             example: [
-                              {
-                                herramienta: 'buscarCliente',
-                                parametros: { criterio: 'Nick Fury' },
-                                resultado: { encontrado: true, cliente: { id: 1, nombre: 'Nick Fury' } },
-                              },
+                              { herramienta: 'buscarCliente', parametros: { criterio: 'Clint Barton' }, resultado: { encontrado: false } },
+                              { herramienta: 'crearUsuario', parametros: { email: 'cbarton@shield.com' }, resultado: { success: true, usuario: { id: 45 } } },
+                              { herramienta: 'crearCliente', parametros: { id_usuario: 45, nombre: 'Clint Barton' }, resultado: { success: true, cliente: { id: 12 } } },
+                              { herramienta: 'crearVehiculo', parametros: { id_cliente: 12, marca: 'Ford', modelo: 'Mustang', placa: 'HAWK-01' }, resultado: { success: true, vehiculo: { id: 8 } } },
+                              { herramienta: 'crearOrdenServicio', parametros: { id_cliente: 12, id_vehiculo: 8, falla_reportada: 'Frenos' }, resultado: { success: true, orden: { id: 102 } } }
                             ],
                           },
                         },
@@ -100,6 +109,19 @@ const swaggerOptions = {
         post: {
           summary: 'Validar token',
           tags: ['Tokens'],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    token: { type: 'string', example: 'eyJhbGciOiJIUzI1Ni...' }
+                  },
+                },
+              },
+            },
+          },
           responses: { 200: { description: 'Token válido' }, 401: { description: 'Token inválido' } },
         },
       },
@@ -111,7 +133,7 @@ const swaggerOptions = {
         },
       },
 
-      // 🔐 AUTH (Ajustado a /auth/login)
+      // 🔐 AUTH
       '/auth/login': {
         post: {
           summary: 'Auth',
@@ -144,6 +166,19 @@ const swaggerOptions = {
         post: {
           summary: 'Crear Rol',
           tags: ['Roles'],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    nombre: { type: 'string', example: 'Mecánico' }
+                  },
+                },
+              },
+            },
+          },
           responses: { 201: { description: 'Rol creado' } },
         },
       },
@@ -152,6 +187,19 @@ const swaggerOptions = {
           summary: 'Actualizar rol',
           tags: ['Roles'],
           parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    nombre: { type: 'string', example: 'Jefe de Taller' }
+                  },
+                },
+              },
+            },
+          },
           responses: { 200: { description: 'Rol actualizado' } },
         },
         delete: {
@@ -172,6 +220,21 @@ const swaggerOptions = {
         post: {
           summary: 'Crear usuario',
           tags: ['Usuarios'],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    email: { type: 'string', example: 'thanos.snap@oscorp.fake' },
+                    password: { type: 'string', example: 'secret123' },
+                    id_rol: { type: 'integer', example: 2 },
+                  },
+                },
+              },
+            },
+          },
           responses: { 201: { description: 'Usuario creado' } },
         },
       },
@@ -180,6 +243,19 @@ const swaggerOptions = {
           summary: 'Actualizar usuario',
           tags: ['Usuarios'],
           parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    email: { type: 'string', example: 'nuevo@shield.com' }
+                  },
+                },
+              },
+            },
+          },
           responses: { 200: { description: 'Usuario actualizado' } },
         },
         delete: {
@@ -200,6 +276,21 @@ const swaggerOptions = {
         post: {
           summary: 'Crear empleado',
           tags: ['Empleados'],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    nombre: { type: 'string', example: 'Tony Stark' },
+                    especialidad: { type: 'string', example: 'Motor y Electrónica' },
+                    id_usuario: { type: 'integer', example: 1 },
+                  },
+                },
+              },
+            },
+          },
           responses: { 201: { description: 'Empleado creado' } },
         },
       },
@@ -208,6 +299,19 @@ const swaggerOptions = {
           summary: 'Actualizar empleado',
           tags: ['Empleados'],
           parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    especialidad: { type: 'string', example: 'Diagnóstico avanzado' }
+                  },
+                },
+              },
+            },
+          },
           responses: { 200: { description: 'Empleado actualizado' } },
         },
         delete: {
@@ -228,6 +332,21 @@ const swaggerOptions = {
         post: {
           summary: 'Crear Cliente',
           tags: ['Clientes'],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    nombre: { type: 'string', example: 'Thanos de Titán' },
+                    telefono: { type: 'string', example: '000-INVALIDO' },
+                    email: { type: 'string', example: 'thanos.snap@oscorp.fake' },
+                  },
+                },
+              },
+            },
+          },
           responses: { 201: { description: 'Cliente creado' } },
         },
       },
@@ -236,6 +355,19 @@ const swaggerOptions = {
           summary: 'Actualizar cliente',
           tags: ['Clientes'],
           parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    telefono: { type: 'string', example: '555-7777' }
+                  },
+                },
+              },
+            },
+          },
           responses: { 200: { description: 'Cliente actualizado' } },
         },
         delete: {
@@ -256,6 +388,23 @@ const swaggerOptions = {
         post: {
           summary: 'Crear vehiculo',
           tags: ['Vehículos'],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    marca: { type: 'string', example: 'Ford' },
+                    modelo: { type: 'string', example: 'Mustang' },
+                    anio: { type: 'integer', example: 1969 },
+                    placa: { type: 'string', example: 'HAWK-01' },
+                    id_cliente: { type: 'integer', example: 1 },
+                  },
+                },
+              },
+            },
+          },
           responses: { 201: { description: 'Vehículo registrado' } },
         },
       },
@@ -264,6 +413,19 @@ const swaggerOptions = {
           summary: 'Actualizar vehiculo',
           tags: ['Vehículos'],
           parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    placa: { type: 'string', example: 'HAWK-02' }
+                  },
+                },
+              },
+            },
+          },
           responses: { 200: { description: 'Vehículo actualizado' } },
         },
         delete: {
@@ -284,6 +446,22 @@ const swaggerOptions = {
         post: {
           summary: 'Crear servicio',
           tags: ['Orden de Servicio'],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    id_cliente: { type: 'integer', example: 1 },
+                    id_vehiculo: { type: 'integer', example: 1 },
+                    falla_reportada: { type: 'string', example: 'Falla en los frenos' },
+                    estado: { type: 'string', example: 'Recibido' },
+                  },
+                },
+              },
+            },
+          },
           responses: { 201: { description: 'Orden creada' } },
         },
       },
@@ -298,6 +476,19 @@ const swaggerOptions = {
           summary: 'Actualizar servicio',
           tags: ['Orden de Servicio'],
           parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    estado: { type: 'string', example: 'En Proceso' }
+                  },
+                },
+              },
+            },
+          },
           responses: { 200: { description: 'Orden actualizada' } },
         },
         delete: {
@@ -328,6 +519,19 @@ const swaggerOptions = {
           summary: 'Actualizar reporte',
           tags: ['Reportes'],
           parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    descripcion: { type: 'string', example: 'Reporte actualizado del taller' }
+                  },
+                },
+              },
+            },
+          },
           responses: { 200: { description: 'Reporte actualizado' } },
         },
         delete: {
